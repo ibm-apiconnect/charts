@@ -1,7 +1,7 @@
 # IBM API Connect Kubernetes Helm Charts
 
 ## Charts
- * [Gateway Chart](https://github.com/ibm-apiconnect/tree/master/stable/dynamic-gateway-service)
+ * [Gateway Chart](https://github.com/ibm-apiconnect/charts/tree/master/stable/dynamic-gateway-service)
 
 ## Authors
 
