@@ -65,12 +65,12 @@ ingress:
     enabled: true
     enableTLS: false
     hosts:
-    - name: gateway.acme.com
+    - name: gateway.example.com
       # secretName: chart-example-tls
     annotations:
   gwd:
     enabled: true
     enableTLS: false
     hosts:
-    - name: gwd.acme.com
+    - name: gwd.example.com
     annotations:
