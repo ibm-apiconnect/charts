@@ -1,0 +1,28 @@
+{{- if .Values.ingress.gwd.enabled -}}
+apiVersion: extensions/v1beta1
+kind: Ingress
+metadata:
+  name: {{ template "dynamic-gateway-service.fullname" . }}
+  labels:
+    app: {{ template "dynamic-gateway-service.fullname" . }}
+    component: {{ template "dynamic-gateway-service.name" . }}
+    chart: {{ .Chart.Name }}-{{ .Chart.Version | replace "+" "_" }}
+    release: {{ .Release.Name }}
+    heritage: {{ .Release.Service }}
+  annotations:
+    ingress.kubernetes.io/ssl-passthrough: "true"
+    {{- range $key, $value := .Values.ingress.gwd.annotations }}
+    {{ $key }}: {{ $value | quote }}
+    {{- end }}
+spec:
+  rules:
+    {{- range $host := .Values.ingress.gwd.hosts }}
+    - host: {{ $host.name }}
+      http:
+        paths:
+          - path: /
+            backend:
+              serviceName: {{ template "dynamic-gateway-service.fullname" $ }}-ingress
+              servicePort: {{ $.Values.datapower.apicGatewayServiceLocalPort }}
+    {{- end -}}
+{{- end -}}

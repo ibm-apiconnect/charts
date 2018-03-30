@@ -1,0 +1,129 @@
+apiVersion: apps/v1beta1
+kind: StatefulSet
+metadata:
+  name: {{ template "dynamic-gateway-service.fullname" . }}
+  labels:
+    app: {{ template "dynamic-gateway-service.name" . }}
+    chart: {{ template "dynamic-gateway-service.chart" . }}
+    release: {{ .Release.Name }}
+    heritage: {{ .Release.Service }}
+spec:
+  serviceName: {{ template "dynamic-gateway-service.fullname" . }}
+  replicas: {{ .Values.datapower.replicaCount }}
+  selector:
+    matchLabels:
+      app: {{ template "dynamic-gateway-service.name" . }}
+      release: {{ .Release.Name }}
+  template:
+    metadata:
+      annotations:
+        webGUIPort: {{ .Values.datapower.webGuiManagementPort | quote }}
+        sshPort: {{ .Values.datapower.gatewaySshPort | quote }}
+        restPort: {{ .Values.datapower.restManagementPort | quote }}
+      labels:
+        app: {{ template "dynamic-gateway-service.name" . }}
+        release: {{ .Release.Name }}
+    spec:
+      {{- if .Values.datapower.image.pullSecrets }}
+      imagePullSecrets:
+      {{- range .Values.datapower.image.pullSecrets }}
+      - name: {{ .name }}
+      {{- end }}
+      {{- end }}
+      initContainers:
+        - name: dpinit
+          image: busybox
+          command:
+            - sh
+            - -c
+            - |
+              cp -RL /init/config/* /drouter/config
+              chown -R 101:101 /start /drouter/config /root/secure/usrcerts/apiconnect
+              chmod -R 0777 /start /drouter/config /root/secure/usrcerts/apiconnect
+          volumeMounts:
+            - name: init-config-volume
+              mountPath: /init/config
+            - name: init-config-apiconnect-volume
+              mountPath: /init/config/apiconnect
+            - name: start-volume
+              mountPath: /start
+            - name: drouter-config-volume
+              mountPath: /drouter/config
+            - name: root-secure-usrcerts-apiconnect-volume
+              mountPath: /root/secure/usrcerts/apiconnect
+      containers:
+        - name: {{ .Chart.Name }}
+          image: "{{ .Values.datapower.image.repository }}:{{ .Values.datapower.image.tag }}"
+          imagePullPolicy: {{ .Values.datapower.image.pullPolicy }}
+          command:
+            - sh
+            - -c
+            - |
+              set -x
+              export $(env | grep ^DATAPOWER_ | cut -d= -f1)
+              /root/node /start/gateway-peering.js
+              exec /bin/drouter "$@"
+          stdin: true
+          tty: true
+          env:
+            - name: APICONNECT_K8S_NAMESPACE
+              value: {{ .Release.Namespace }}
+            - name: APICONNECT_K8S_PEERS_SVC_NAME
+              value: {{ template "dynamic-gateway-service.fullname" . }}
+            - name: GATEWAY_PEERING_MONITOR_PORT
+              value: {{ .Values.datapower.gatewayPeeringMonitorPort | quote }}
+            - name: GATEWAY_PEERING_LOCAL_PORT
+              value: {{ .Values.datapower.gatewayPeeringLocalPort | quote }}
+            - name: GATEWAY_PEERING_ENABLE_SSL
+              value: {{ .Values.datapower.env.peeringEnableSSL | quote }}
+{{- if .Values.datapower.env.workerThreads }}
+{{- if gt .Values.datapower.env.workerThreads 0.0 }}
+            - name: DATAPOWER_WORKER_THREADS
+              value: {{ .Values.datapower.env.workerThreads | quote }}
+{{- end }}
+{{- end }}
+            - name: "DATAPOWER_ACCEPT_LICENSE"
+              value: "true"
+            - name: "DATAPOWER_INTERACTIVE"
+              value: {{ .Values.datapower.env.interactive | quote }}
+            - name: "DATAPOWER_LOG_LEVEL"
+              value: "6"
+          resources:
+{{ toYaml .Values.datapower.resources | indent 12 }}
+          ports:
+            - containerPort: {{ .Values.datapower.gatewayPeeringLocalPort }}
+              name: peer-local-port
+            - containerPort: {{ .Values.datapower.gatewayPeeringMonitorPort }}
+              name: peer-monit-port
+            - containerPort: {{ .Values.datapower.apicGatewayServiceLocalPort }}
+              name: apic-gw-mgmt
+            - containerPort: {{ .Values.datapower.apiGatewayLocalPort }}
+              name: api-gw-svc
+            - containerPort: {{ .Values.datapower.gatewaySshPort }}
+              name: ssh-port
+            - containerPort: {{ .Values.datapower.webGuiManagementPort }}
+              name: webgui-port
+            - containerPort: {{ .Values.datapower.restManagementPort }}
+              name: rmi-port
+          volumeMounts:
+            - name: start-volume
+              mountPath: /start
+            - name: drouter-config-volume
+              mountPath: /drouter/config
+            - name: root-secure-usrcerts-apiconnect-volume
+              mountPath: /root/secure/usrcerts/apiconnect
+      volumes:
+        - name: init-config-volume
+          configMap:
+            name: {{ template "dynamic-gateway-service.fullname" . }}-init-config
+        - name: init-config-apiconnect-volume
+          configMap:
+            name: {{ template "dynamic-gateway-service.fullname" . }}-init-config-apic
+        - name: start-volume
+          configMap:
+            name: {{ template "dynamic-gateway-service.fullname" . }}-static-gateway-peering
+        - name: drouter-config-volume
+          emptyDir: {}
+        - name: root-secure-usrcerts-apiconnect-volume
+          secret:
+            secretName: {{ .Values.datapower.apicGatewayServiceTLSSecret }}

@@ -1,0 +1,48 @@
+# Headless service for stable DNS entries of StatefulSet members.
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ template "dynamic-gateway-service.fullname" . }}
+  labels:
+    app: {{ template "dynamic-gateway-service.name" . }}
+    chart: {{ template "dynamic-gateway-service.chart" . }}
+    release: {{ .Release.Name }}
+    heritage: {{ .Release.Service }}
+spec:
+  ports:
+    - port: {{ .Values.datapower.gatewayPeeringLocalPort }}
+      targetPort: {{ .Values.datapower.gatewayPeeringLocalPort }}
+      protocol: TCP
+      name: peer-local-port
+    - port: {{ .Values.datapower.gatewayPeeringMonitorPort }}
+      targetPort: {{ .Values.datapower.gatewayPeeringLocalPort }}
+      protocol: TCP
+      name: peer-monit-port
+  clusterIP: None
+  publishNotReadyAddresses: true
+  selector:
+    app: {{ template "dynamic-gateway-service.name" . }}
+    release: {{ .Release.Name }}
+---
+# Client service for connecting to any GatewayDirector instance
+# 
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ template "dynamic-gateway-service.fullname" . }}-ingress
+  labels:
+    app: {{ template "dynamic-gateway-service.name" . }}
+spec:
+  ports:
+    - port: {{ .Values.datapower.apicGatewayServiceLocalPort }}
+      targetPort: {{ .Values.datapower.apicGatewayServiceLocalPort }}
+      protocol: TCP
+      name: apic-gw-mgmt
+    - port: {{ .Values.datapower.apiGatewayLocalPort }}
+      targetPort: {{ .Values.datapower.apiGatewayLocalPort }}
+      protocol: TCP
+      name: api-gw-svc
+  #publishNotReadyAddresses: true
+  selector:
+    app: {{ template "dynamic-gateway-service.name" . }}
+    release: {{ .Release.Name }}
