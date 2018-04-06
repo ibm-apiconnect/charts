@@ -21,7 +21,7 @@ $ helm delete my-release
 ## Configuration
 The helm chart has the following Values that can be overriden using the install `--set` parameter or by providing your own values file. For example:
 
-`helm install --set image.repository=<myimage> stable/dynamic-gateway-service`
+`helm install --set datapower.image.repository=<myimage> stable/dynamic-gateway-service`
 
 | Value                                                           | Description                                       | Default             |
 |-----------------------------------------------------------------|---------------------------------------------------|---------------------|
