@@ -34,18 +34,11 @@ The helm chart has the following Values that can be overriden using the install 
 | `datapower.resources.limits.memory`                             | Container memory limit                            | 8Gi                 |
 | `datapower.resources.requests.cpu`                              | Container CPU requested                           | 8                   |
 | `datapower.resources.requests.memory`                           | Container Memory requested                        | 8Gi                 |
-| `datapower.quotaEnforcementTLSSecret`                           | Crypto material for quota enforcement             |                     |
 | `datapower.apicGatewayTLSSecret`                                | REQUIRED: crypto material for API Connect gateway | N/A (required)      |
-| `datapower.quotaEnforcementServerPort`                          | Port for quota enforcement server                 | 16379               |
-| `datapower.quotaEnforcementMonitorPort`                         | Port for quota enforcement monitor                | 26379               |
 | `datapower.gatewayPeeringLocalPort`                             | Port for gateway peering server                   | 16380               |
 | `datapower.gatewayPeeringMonitorPort`                           | Port for gateway peering monitor                  | 26380               |
 | `datapower.apicGatewayServiceLocalPort`                         | Port for API Connect Gateway Service              | 3000                |
 | `datapower.apiGatewayLocalPort`                                 | Port for API Gateway                              | 9443                |
-| `datapower.storage.quotaEnforcement.accessModes`                | Access mode for quota enforcement PV              | ReadWriteOnce       |
-| `datapower.storage.quotaEnforcement.resources.requests.storage` | Size of quota enforcement PV                      | 10Gi                |
-| `datapower.storage.gatewayPeering.accessModes`                  | Access mode for gateway peering PV                | ReadWriteOnce       |
-| `datapower.storage.gatewayPeering.resources.requests.storage`   | Size of gateway peering PV                        | 50Gi                |
 | `datapower.webGuiManagementState`                               | WebGUI Management admin state                     | disabled            |
 | `datapower.webGuiManagementPort`                                | WebGUI Management port                            | 9090                |
 | `datapower.gatewaySshState`                                     | SSH admin state                                   | disabled            |
