@@ -1,33 +1,33 @@
-{{- if .Values.ingress.gwd.enabled -}}
+{{- if .Values.ingress.gateway.enabled -}}
 apiVersion: extensions/v1beta1
 kind: Ingress
 metadata:
-  name: {{ template "dynamic-gateway-service.fullname" . }}
+  name: {{ template "dynamic-gateway-service.fullname" . }}-gwmgmt
   labels:
-    app: {{ template "dynamic-gateway-service.fullname" . }}
-    component: {{ template "dynamic-gateway-service.name" . }}
+    app: {{ template "dynamic-gateway-service.fullname" . }}-gwmgmt
+    component: {{ template "dynamic-gateway-service.name" . }}-gwmgmt
     chart: {{ .Chart.Name }}-{{ .Chart.Version | replace "+" "_" }}
     release: {{ .Release.Name }}
     heritage: {{ .Release.Service }}
   annotations:
     ingress.kubernetes.io/ssl-passthrough: "true"
-    {{- range $key, $value := .Values.ingress.gwd.annotations }}
+    {{- range $key, $value := .Values.ingress.gatewaymgmt.annotations }}
     {{ $key }}: {{ $value | quote }}
     {{- end }}
 spec:
   rules:
-    {{- range $host := .Values.ingress.gwd.hosts }}
+    {{- range $host := .Values.ingress.gatewaymgmt.hosts }}
     - host: {{ $host.name }}
       http:
         paths:
           - path: /
             backend:
               serviceName: {{ template "dynamic-gateway-service.fullname" $ }}-ingress
-              servicePort: {{ $.Values.datapower.apicGatewayServiceLocalPort }}
+              servicePort: {{ $.Values.datapower.webGuiManagementPort }}
     {{- end -}}
-  {{- if .Values.ingress.gwd.enableTLS }}
+  {{- if .Values.ingress.gatewaymgmt.enableTLS }}
   tls:
-    {{- range $host := .Values.ingress.gwd.hosts }}
+    {{- range $host := .Values.ingress.gatewaymgmt.hosts }}
     - hosts:
       - {{ $host.name }}
       secretName: {{ $host.secretName }}

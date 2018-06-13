@@ -74,3 +74,10 @@ ingress:
     hosts:
     - name: gwd.example.com
     annotations:
+  gatewaymgmt:
+    enabled: true
+    enableTLS: false
+    hosts:
+    - name: gwd-mgmt.example.com
+      secretName: "gw-cert"
+    annotations:
