@@ -42,6 +42,10 @@ spec:
       targetPort: {{ .Values.datapower.apiGatewayLocalPort }}
       protocol: TCP
       name: api-gw-svc
+    - port: {{ .Values.datapower.webGuiManagementPort }}
+      targetPort: {{ .Values.datapower.webGuiManagementPort }}
+      protocol: TCP
+      name: apic-gw-web-mgmt
   #publishNotReadyAddresses: true
   selector:
     app: {{ template "dynamic-gateway-service.name" . }}
