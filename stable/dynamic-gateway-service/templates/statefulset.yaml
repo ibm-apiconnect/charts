@@ -14,12 +14,19 @@ spec:
     matchLabels:
       app: {{ template "dynamic-gateway-service.name" . }}
       release: {{ .Release.Name }}
+  updateStrategy:
+    type: RollingUpdate
   template:
     metadata:
       annotations:
         webGUIPort: {{ .Values.datapower.webGuiManagementPort | quote }}
         sshPort: {{ .Values.datapower.gatewaySshPort | quote }}
         restPort: {{ .Values.datapower.restManagementPort | quote }}
+        prometheus.io/scrape: 'true'
+        prometheus.io/path: '/snmp'
+        prometheus.io/port: '63512'
+        prometheus.io/target: '127.0.0.1:{{ .Values.datapower.snmpPort }}'
+        prometheus.io/module: 'dpStatusMIB'
       labels:
         app: {{ template "dynamic-gateway-service.name" . }}
         release: {{ .Release.Name }}
@@ -38,19 +45,27 @@ spec:
             - -c
             - |
               cp -RL /init/config/* /drouter/config
-              chown -R 101:101 /start /drouter/config /root/secure/usrcerts/apiconnect
-              chmod -R 0777 /start /drouter/config /root/secure/usrcerts/apiconnect
+              chown -R 101:101 /drouter/config /root/secure/usrcerts/apiconnect
+              chmod -R 0777 /drouter/config /root/secure/usrcerts/apiconnect
+{{- if eq (.Values.datapower.env.enableTMS | default "off") "on" }}
+              find /drouter/ramdisk2/mnt -type d -exec chown 101:101 {} \;
+              find /drouter/ramdisk2/mnt -type d -exec chmod 0755 {} \;
+{{- end }}
           volumeMounts:
             - name: init-config-volume
               mountPath: /init/config
             - name: init-config-apiconnect-volume
               mountPath: /init/config/apiconnect
-            - name: start-volume
-              mountPath: /start
             - name: drouter-config-volume
               mountPath: /drouter/config
             - name: root-secure-usrcerts-apiconnect-volume
               mountPath: /root/secure/usrcerts/apiconnect
+            - name: drouter-ramdisk2-volume
+              mountPath: /drouter/ramdisk2
+{{- if eq (.Values.datapower.env.enableTMS | default "off") "on" }}
+            - name: tms
+              mountPath: /drouter/ramdisk2/mnt/raid-volume/raid0/local
+{{- end }}
       containers:
         - name: {{ .Chart.Name }}
           image: "{{ .Values.datapower.image.repository }}:{{ .Values.datapower.image.tag }}"
@@ -62,7 +77,7 @@ spec:
               set -x
               export $(env | grep ^DATAPOWER_ | cut -d= -f1)
               /root/node /start/gateway-peering.js
-              exec /bin/drouter "$@"
+              exec /start.sh "$@"
           stdin: true
           tty: true
           env:
@@ -70,12 +85,36 @@ spec:
               value: {{ .Release.Namespace }}
             - name: APICONNECT_K8S_PEERS_SVC_NAME
               value: {{ template "dynamic-gateway-service.fullname" . }}
+            - name: APICONNECT_V5_COMPAT_MODE
+{{/* Enforce valid values for apicGatewayServiceV5CompatibilityMode as 'on' and 'off' (default: 'on') */}}
+{{- if .Values.datapower.apicGatewayServiceV5CompatibilityMode }}
+{{- if eq .Values.datapower.apicGatewayServiceV5CompatibilityMode "off" }}
+              value: "off"
+{{- else }}
+              value: "on"
+{{- end }}
+{{- else }}
+              value: "on"
+{{- end }}
+            - name: APICONNECT_ENABLE_TMS
+{{/* Enforce valid values for enableTMS as 'on' and 'off' (default: 'off') */}}
+{{- if eq (.Values.datapower.env.enableTMS | default "off") "on" }}
+              value: "on"
+{{- else }}
+              value: "off"
+{{- end }}
             - name: GATEWAY_PEERING_MONITOR_PORT
               value: {{ .Values.datapower.gatewayPeeringMonitorPort | quote }}
             - name: GATEWAY_PEERING_LOCAL_PORT
               value: {{ .Values.datapower.gatewayPeeringLocalPort | quote }}
             - name: GATEWAY_PEERING_ENABLE_SSL
               value: {{ .Values.datapower.env.peeringEnableSSL | quote }}
+            - name: TMS_PEERING_MONITOR_PORT
+              value: {{ .Values.datapower.tmsPeeringMonitorPort | quote }}
+            - name: TMS_PEERING_LOCAL_PORT
+              value: {{ .Values.datapower.tmsPeeringLocalPort | quote }}
+            - name: TMS_PEERING_ENABLE_SSL
+              value: {{ .Values.datapower.env.tmsPeeringEnableSSL | quote }}
 {{- if .Values.datapower.env.workerThreads }}
 {{- if gt .Values.datapower.env.workerThreads 0.0 }}
             - name: DATAPOWER_WORKER_THREADS
@@ -84,6 +123,8 @@ spec:
 {{- end }}
             - name: "DATAPOWER_ACCEPT_LICENSE"
               value: "true"
+            - name: "DATAPOWER_LOG_COLOR"
+              value: "false"
             - name: "DATAPOWER_INTERACTIVE"
               value: {{ .Values.datapower.env.interactive | quote }}
             - name: "DATAPOWER_LOG_LEVEL"
@@ -95,6 +136,10 @@ spec:
               name: peer-local-port
             - containerPort: {{ .Values.datapower.gatewayPeeringMonitorPort }}
               name: peer-monit-port
+            - containerPort: {{ .Values.datapower.tmsPeeringLocalPort }}
+              name: tms-local-port
+            - containerPort: {{ .Values.datapower.tmsPeeringMonitorPort }}
+              name: tms-monit-port
             - containerPort: {{ .Values.datapower.apicGatewayServiceLocalPort }}
               name: apic-gw-mgmt
             - containerPort: {{ .Values.datapower.apiGatewayLocalPort }}
@@ -105,6 +150,24 @@ spec:
               name: webgui-port
             - containerPort: {{ .Values.datapower.restManagementPort }}
               name: rmi-port
+          livenessProbe:
+            httpGet:
+              scheme: HTTPS
+              path: /health
+              port: apic-gw-mgmt
+            initialDelaySeconds: 180
+            timeoutSeconds: 5
+            periodSeconds: 10
+            failureThreshold: 5
+          readinessProbe:
+            httpGet:
+              scheme: HTTPS
+              path: /health
+              port: apic-gw-mgmt
+            initialDelaySeconds: 120
+            timeoutSeconds: 5
+            periodSeconds: 10
+            failureThreshold: 3
           volumeMounts:
             - name: start-volume
               mountPath: /start
@@ -112,6 +175,16 @@ spec:
               mountPath: /drouter/config
             - name: root-secure-usrcerts-apiconnect-volume
               mountPath: /root/secure/usrcerts/apiconnect
+            - name: root-secure-usrcerts-apiconnect-gwd-volume
+              mountPath: /root/secure/usrcerts/apiconnect/gwd
+            - name: drouter-ramdisk2-volume
+              mountPath: /drouter/ramdisk2
+            - name: drouter-temporary-volume
+              mountPath: /drouter/temporary
+{{- if eq (.Values.datapower.env.enableTMS | default "off") "on" }}
+            - name: tms
+              mountPath: /drouter/ramdisk2/mnt/raid-volume/raid0/local
+{{- end }}
       volumes:
         - name: init-config-volume
           configMap:
@@ -125,5 +198,23 @@ spec:
         - name: drouter-config-volume
           emptyDir: {}
         - name: root-secure-usrcerts-apiconnect-volume
+          emptyDir: {}
+        - name: drouter-ramdisk2-volume
+          emptyDir:
+            medium: ""
+        - name: drouter-temporary-volume
+          emptyDir:
+            medium: ""
+        - name: root-secure-usrcerts-apiconnect-gwd-volume
           secret:
             secretName: {{ .Values.datapower.apicGatewayServiceTLSSecret }}
+{{- if eq (.Values.datapower.env.enableTMS | default "off") "on" }}
+  volumeClaimTemplates:
+  - metadata:
+      name: tms
+      labels:
+        app: {{ template "dynamic-gateway-service.fullname" . }}
+        release: {{ .Release.Name }}
+    spec:
+{{ toYaml .Values.datapower.storage.tmsPeering | indent 6 }}
+{{- end }}

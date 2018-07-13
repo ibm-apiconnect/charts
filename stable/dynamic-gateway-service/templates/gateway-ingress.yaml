@@ -1,3 +1,4 @@
+{{- if eq .Values.ingressType "ingress" }}
 {{- if .Values.ingress.gateway.enabled -}}
 apiVersion: extensions/v1beta1
 kind: Ingress
@@ -33,4 +34,5 @@ spec:
       secretName: {{ $host.secretName }}
     {{- end }}
   {{- end }}
+{{- end -}}
 {{- end -}}

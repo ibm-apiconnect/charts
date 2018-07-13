@@ -8,6 +8,8 @@ metadata:
     chart: {{ template "dynamic-gateway-service.chart" . }}
     release: {{ .Release.Name }}
     heritage: {{ .Release.Service }}
+  annotations:
+    "service.alpha.kubernetes.io/tolerate-unready-endpoints": "true"
 spec:
   ports:
     - port: {{ .Values.datapower.gatewayPeeringLocalPort }}
@@ -15,9 +17,19 @@ spec:
       protocol: TCP
       name: peer-local-port
     - port: {{ .Values.datapower.gatewayPeeringMonitorPort }}
-      targetPort: {{ .Values.datapower.gatewayPeeringLocalPort }}
+      targetPort: {{ .Values.datapower.gatewayPeeringMonitorPort }}
       protocol: TCP
       name: peer-monit-port
+{{- if eq (.Values.datapower.env.enableTMS | default "off") "on" }}
+    - port: {{ .Values.datapower.tmsPeeringLocalPort }}
+      targetPort: {{ .Values.datapower.tmsPeeringLocalPort }}
+      protocol: TCP
+      name: tms-local-port
+    - port: {{ .Values.datapower.tmsPeeringMonitorPort }}
+      targetPort: {{ .Values.datapower.tmsPeeringMonitorPort }}
+      protocol: TCP
+      name: tms-monit-port
+{{- end }}
   clusterIP: None
   publishNotReadyAddresses: true
   selector:
