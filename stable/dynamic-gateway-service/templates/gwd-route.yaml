@@ -1,7 +1,7 @@
-{{- if eq .Values.ingressType "ingress" }}
+{{- if eq .Values.ingressType "route" }}
 {{- if .Values.ingress.gwd.enabled -}}
-apiVersion: extensions/v1beta1
-kind: Ingress
+apiVersion: route.openshift.io/v1
+kind: Route
 metadata:
   name: {{ template "dynamic-gateway-service.fullname" . }}
   labels:
@@ -11,20 +11,17 @@ metadata:
     release: {{ .Release.Name }}
     heritage: {{ .Release.Service }}
   annotations:
-    ingress.kubernetes.io/ssl-passthrough: "true"
     {{- range $key, $value := .Values.ingress.gwd.annotations }}
     {{ $key }}: {{ $value | quote }}
     {{- end }}
 spec:
-  rules:
-    {{- range $host := .Values.ingress.gwd.hosts }}
-    - host: {{ $host.name }}
-      http:
-        paths:
-          - path: /
-            backend:
-              serviceName: {{ template "dynamic-gateway-service.fullname" $ }}-ingress
-              servicePort: {{ $.Values.datapower.apicGatewayServiceLocalPort }}
-    {{- end -}}
+  host: {{ (index .Values.ingress.gwd.hosts 0).name }}
+  port:
+    targetPort: {{ $.Values.datapower.apicGatewayServiceLocalPort }}
+  to:
+    kind: Service
+    name: {{ template "dynamic-gateway-service.fullname" . }}-ingress
+  tls:
+    termination: passthrough
 {{- end -}}
 {{- end -}}

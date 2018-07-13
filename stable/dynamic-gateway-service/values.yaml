@@ -7,7 +7,6 @@
 #
 datapower:
   image:
-# before final checkin remove this comment and make repo and tag be release values
     repository: ibmcom/datapower
     tag: 7.7.0.0.298019
     pullPolicy: IfNotPresent
@@ -15,19 +14,28 @@ datapower:
     - name: datapower-pull-secrets
   env:
     # Should agree with .Values.requests.cpu if set. If not set or is 0 the env var will not be set.
-    workerThreads: 
+    workerThreads:
     # interactive should be true or false
     interactive: true
     # Should be on or off
     peeringEnableSSL: "on"
+    # Should be on or off
+    tmsPeeringEnableSSL: "on"
+    # Should be on or off
+    enableTMS: "off"
   replicaCount: 3
   gatewayPeeringLocalPort: 16380
   gatewayPeeringMonitorPort: 26380
+  tmsPeeringLocalPort: 16381
+  tmsPeeringMonitorPort: 26381
   apicGatewayServiceLocalPort: 3000
   apicGatewayServiceLocalAddress: 0.0.0.0
   apicGatewayServiceTLSSecret:
+  # This value should either be 'on' or 'off'. Default is 'on'
+  apicGatewayServiceV5CompatibilityMode: "on"
   apiGatewayLocalAddress: 0.0.0.0
   apiGatewayLocalPort: 9443
+  configSequenceInterval:
   # Gateway MGMT variables
   # This value should either be 'enabled' or 'disabled'. Default is disabled
   webGuiManagementState: "disabled"
@@ -43,6 +51,17 @@ datapower:
   restManagementLocalAddress: 0.0.0.0
   xmlManagementLocalAddress: 0.0.0.0
   xmlManagementLocalPort: 5550
+  # This value should either be 'enabled' or 'disabled'. Default is enabled
+  snmpState: "enabled"
+  snmpLocalAddress: 0.0.0.0
+  snmpPort: 1161
+  storage:
+    tmsPeering:
+      accessModes:
+      - ReadWriteOnce
+      resources:
+        requests:
+          storage: 10Gi
   resources:
     requests:
       memory: 8Gi
@@ -60,6 +79,7 @@ service:
 #-----------------------------------------------------------------------------
 # Ingress Section
 #
+ingressType: "ingress"
 ingress:
   gateway:
     enabled: true

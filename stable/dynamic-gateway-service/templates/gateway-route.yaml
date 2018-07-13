@@ -1,0 +1,27 @@
+{{- if eq .Values.ingressType "route" }}
+{{- if .Values.ingress.gateway.enabled -}}
+apiVersion: route.openshift.io/v1
+kind: Route
+metadata:
+  name: {{ template "dynamic-gateway-service.fullname" . }}-gw
+  labels:
+    app: {{ template "dynamic-gateway-service.fullname" . }}-gw
+    component: {{ template "dynamic-gateway-service.name" . }}-gw
+    chart: {{ .Chart.Name }}-{{ .Chart.Version | replace "+" "_" }}
+    release: {{ .Release.Name }}
+    heritage: {{ .Release.Service }}
+  annotations:
+    {{- range $key, $value := .Values.ingress.gateway.annotations }}
+    {{ $key }}: {{ $value | quote }}
+    {{- end }}
+spec:
+  host: {{ (index .Values.ingress.gateway.hosts 0).name }}
+  port:
+    targetPort: {{ $.Values.datapower.apiGatewayLocalPort }}
+  to:
+    kind: Service
+    name: {{ template "dynamic-gateway-service.fullname" . }}-ingress
+  tls:
+    termination: passthrough
+{{- end -}}
+{{- end -}}

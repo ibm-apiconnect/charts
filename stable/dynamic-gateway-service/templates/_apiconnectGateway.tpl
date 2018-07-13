@@ -1,4 +1,4 @@
-{{/* DataPower Configuration for the APIConnect Gatway  */}}
+{{/* DataPower Configuration for the APIConnect Gateway  */}}
 {{- define "defaultDomainConfig" }}
 auto-startup.cfg: |
     top; configure terminal;
@@ -19,7 +19,7 @@ auto-startup.cfg: |
 {{- if eq .Values.datapower.restManagementState "enabled" }}
     rest-mgmt
       admin-state {{ .Values.datapower.restManagementState }}
-      local-address {{ .Values.datapower.restManagementLocalAddress }} 
+      local-address {{ .Values.datapower.restManagementLocalAddress }}
       port {{ .Values.datapower.restManagementPort }}
       ssl-config-type server
     exit
@@ -30,18 +30,108 @@ auto-startup.cfg: |
 {{- if eq .Values.datapower.webGuiManagementState "enabled" }}
     web-mgmt
       admin-state {{ .Values.datapower.webGuiManagementState }}
-      local-address {{ .Values.datapower.webGuiManagementLocalAddress }} 
+      local-address {{ .Values.datapower.webGuiManagementLocalAddress }}
       port {{ .Values.datapower.webGuiManagementPort }}
-      save-config-overwrite 
+      save-config-overwrite
       idle-timeout 9000
       ssl-config-type server
     exit
 {{- end }}
 {{- end }}
 
+    %if% available "timezone"
+      timezone "UTC"
+    %endif%
+
+{{- if .Values.datapower.snmpState }}
+{{- if eq .Values.datapower.snmpState "enabled" }}
+    %if% available "snmp"
+    snmp
+      admin-state {{ .Values.datapower.snmpState }}
+      version 2c
+      ip-address {{ .Values.datapower.snmpLocalAddress }}
+      port {{ .Values.datapower.snmpPort }}
+      community public default read-only 0.0.0.0/0
+      trap-default-subscriptions
+      trap-priority warn
+      trap-code 0x00030002
+      trap-code 0x00230003
+      trap-code 0x00330002
+      trap-code 0x00b30014
+      trap-code 0x00e30001
+      trap-code 0x00e40008
+      trap-code 0x00f30008
+      trap-code 0x01530001
+      trap-code 0x01a2000e
+      trap-code 0x01a40001
+      trap-code 0x01a40005
+      trap-code 0x01a40008
+      trap-code 0x01b10006
+      trap-code 0x01b10009
+      trap-code 0x01b20002
+      trap-code 0x01b20004
+      trap-code 0x01b20008
+      trap-code 0x02220001
+      trap-code 0x02220003
+      trap-code 0x02240002
+    exit
+    %endif%
+{{- end }}
+{{- end }}
+
+{{- if eq (.Values.datapower.env.enableTMS | default "off") "on" }}
+    raid-volume raid0
+      admin-state enabled
+      directory tms
+    exit
+
+{{- if ne (.Values.datapower.apicGatewayServiceV5CompatibilityMode | default "on") "off" }}
+{{- if ne (.Values.datapower.env.tmsPeeringEnableSSL | default "on") "off" }}
+    crypto
+      key tms_key cert:///apiconnect/gwd/peering_key.pem
+    exit
+
+    crypto
+      certificate tms_cert cert:///apiconnect/gwd/peering_cert.pem
+    exit
+{{- end }}
+
+    %if% available "include-config"
+
+    include-config "tms-peering-apic"
+      config-url "config:///tms-peering.cfg"
+      auto-execute
+      no interface-detection
+    exit
+
+    exec "config:///tms-peering.cfg"
+
+    %endif%
+{{- end }}
+{{- end }}
+
     domain apiconnect
       visible-domain default
     exit
+
+
+    failure-notification
+      admin-state "enabled"
+      no upload-report
+      no use-smtp
+      internal-state
+      no ffdc packet-capture
+      no ffdc event-log
+      no ffdc memory-trace
+      no always-on-startup
+      always-on-shutdown
+      protocol ftp
+      report-history 5
+    exit
+
+    %if% isfile temporary:///backtrace
+    save error-report
+    %endif%
 
 auto-user.cfg: |
     top; configure terminal;
@@ -60,35 +150,46 @@ auto-user.cfg: |
 apiconnect.cfg: |
     top; configure terminal;
 
+{{/*
+  Enable statistics if either of the following is true:
+  - apicGatewayServiceV5CompatibilityMode is defined and set to anything other than 'off'
+  - apicGatewayServiceV5CompatibilityMode is not defined
+*/}}
+{{- if .Values.datapower.apicGatewayServiceV5CompatibilityMode }}
+{{- if ne .Values.datapower.apicGatewayServiceV5CompatibilityMode "off" }}
     statistics;
+{{- end }}
+{{- else }}
+    statistics;
+{{- end }}
 
     logging target gwd-log
       type file
       format text
-      timestamp syslog
+      timestamp zulu
       size 50000
       local-file logtemp:///gwd-log.log
       event apic-gw-service debug
     exit
 
     crypto
-    key gwd_key cert:///gwd_key.pem
-    exit
-    
-    crypto
-    certificate gwd_cert cert:///gwd_cert.pem
+    key gwd_key cert:///gwd/gwd_key.pem
     exit
 
     crypto
-    certificate gwd_ca cert:///gwd_ca.pem
-    exit
-    
-    crypto
-    key peering_key cert:///peering_key.pem
+    certificate gwd_cert cert:///gwd/gwd_cert.pem
     exit
 
     crypto
-    certificate peering_cert cert:///peering_cert.pem
+    certificate gwd_ca cert:///gwd/gwd_ca.pem
+    exit
+
+    crypto
+    key peering_key cert:///gwd/peering_key.pem
+    exit
+
+    crypto
+    certificate peering_cert cert:///gwd/peering_cert.pem
     exit
 
     crypto
@@ -207,13 +308,13 @@ apiconnect.cfg: |
       curves secp256k1
     exit
     exit
-    
+
     %if% available "include-config"
 
     include-config "gateway-peering-apic"
       config-url "config:///gateway-peering.cfg"
-      auto-execute 
-      no interface-detection 
+      auto-execute
+      no interface-detection
     exit
 
     exec "config:///gateway-peering.cfg"
@@ -221,7 +322,16 @@ apiconnect.cfg: |
     %endif%
 
     apic-gw-service
+{{/* Enforce valid values for apicGatewayServiceV5CompatibilityMode as 'on' and 'off' (default: 'on') */}}
+{{- if .Values.datapower.apicGatewayServiceV5CompatibilityMode }}
+{{- if eq .Values.datapower.apicGatewayServiceV5CompatibilityMode "off" }}
+      v5-compatibility-mode off
+{{- else }}
       v5-compatibility-mode on
+{{- end }}
+{{- else }}
+      v5-compatibility-mode on
+{{- end }}
       admin-state enabled
       ssl-client gwd_client
       ssl-server gwd_server
@@ -231,5 +341,50 @@ apiconnect.cfg: |
       api-gw-port {{ .Values.datapower.apiGatewayLocalPort }}
       gateway-peering gwd
     exit
-    
+
+{{- if eq (.Values.datapower.env.enableTMS | default "off") "on" }}
+{{- if eq (.Values.datapower.apicGatewayServiceV5CompatibilityMode | default "on") "off" }}
+{{- if ne (.Values.datapower.env.tmsPeeringEnableSSL | default "on") "off" }}
+    crypto
+      key tms_key cert:///gwd/peering_key.pem
+    exit
+
+    crypto
+      certificate tms_cert cert:///gwd/peering_cert.pem
+    exit
 {{- end }}
+
+    %if% available "include-config"
+
+    include-config "tms-peering-apic"
+      config-url "config:///tms-peering.cfg"
+      auto-execute
+      no interface-detection
+    exit
+
+    exec "config:///tms-peering.cfg"
+
+    %endif%
+
+    api-security-token-manager
+      admin-state enabled
+      gateway-peering tms
+    exit
+{{- end }}
+{{- end }}
+
+{{- if .Values.datapower.apicGatewayServiceV5CompatibilityMode }}
+{{- if eq .Values.datapower.apicGatewayServiceV5CompatibilityMode "off" }}
+    config-sequence "apiconnect"
+      location "local:///"
+      watch "on"
+      delete-unused "on"
+      match "(.*)\.cfg$"
+      summary "API Connect configuration"
+      run-sequence-interval {{ .Values.datapower.configSequenceInterval | default 3000 }}
+      optimize-for-apic on
+    exit
+{{- end }}
+{{- end }}
+{{- end }}
+
