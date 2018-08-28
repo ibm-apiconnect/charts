@@ -3,6 +3,20 @@
 auto-startup.cfg: |
     top; configure terminal;
 
+{{- if .Values.datapower.adminUserSecret }}
+    %if% available "include-config"
+
+    include-config "auto-user-cfg"
+      config-url "config:///auto-user.cfg"
+      auto-execute
+      no interface-detection
+    exit
+
+    exec "config:///auto-user.cfg"
+
+    %endif%
+{{- end }}
+
 {{- if .Values.datapower.gatewaySshState }}
 {{- if eq .Values.datapower.gatewaySshState "enabled" }}
     ssh {{ .Values.datapower.gatewaySshLocalAddress }} {{ .Values.datapower.gatewaySshPort }}
@@ -136,15 +150,6 @@ auto-startup.cfg: |
 auto-user.cfg: |
     top; configure terminal;
 
-    %if% available "user"
-
-    user "admin"
-      summary "Administrator"
-      password-hashed "$1$12345678$kbapHduhihjieYIUP66Xt/"
-      access-level privileged
-    exit
-
-    %endif%
 {{- end }}
 {{- define "apiconnectDomainConfig" }}
 apiconnect.cfg: |
