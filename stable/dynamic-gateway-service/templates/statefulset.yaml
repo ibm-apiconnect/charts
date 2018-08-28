@@ -39,7 +39,7 @@ spec:
       {{- end }}
       initContainers:
         - name: dpinit
-          image: busybox
+          image: {{ .Values.datapower.image.busyboxrepo | default "busybox" }}
           command:
             - sh
             - -c

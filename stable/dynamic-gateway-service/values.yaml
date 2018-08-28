@@ -12,6 +12,7 @@ datapower:
     pullPolicy: IfNotPresent
     pullSecrets: 
     - name: datapower-pull-secrets
+    busyboxrepo: busybox
   env:
     # Should agree with .Values.requests.cpu if set. If not set or is 0 the env var will not be set.
     workerThreads:
