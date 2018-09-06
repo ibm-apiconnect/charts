@@ -10,9 +10,12 @@ datapower:
     repository: ibmcom/datapower
     tag: 7.7.1.1.300826
     pullPolicy: IfNotPresent
-    pullSecrets: 
+    pullSecrets:
     - name: datapower-pull-secrets
-    busyboxrepo: busybox
+  busybox:
+    repository: busybox
+    tag: 1.29-glibc
+    pullPolicy: IfNotPresent
   env:
     # Should agree with .Values.requests.cpu if set. If not set or is 0 the env var will not be set.
     workerThreads:
@@ -24,7 +27,7 @@ datapower:
     tmsPeeringEnableSSL: "on"
     # Should be on or off
     enableTMS: "off"
-  # In order to replace the default admin credentials, the new credentials should be configured via Secret and `.Values.datapower.adminUserSecret` must be set to the name of 
+  # In order to replace the default admin credentials, the new credentials should be configured via Secret and `.Values.datapower.adminUserSecret` must be set to the name of
   # the Secret containing the admin user's credentials
   #
   # The following are properties which can be used to define the admin user's credentials:
@@ -93,7 +96,7 @@ datapower:
     limits:
       memory: 8Gi
       cpu: 8
-      
+
 
 service:
   type: ClusterIP
@@ -103,7 +106,7 @@ service:
 # Ingress Section
 #
 
-# This value can be ingress or route 
+# This value can be ingress or route
 ingressType: "ingress"
 ingress:
   gateway:
