@@ -39,7 +39,8 @@ spec:
       {{- end }}
       initContainers:
         - name: dpinit
-          image: busybox
+          image: "{{ .Values.datapower.busybox.repository }}:{{ .Values.datapower.busybox.tag }}"
+          imagePullPolicy: {{ .Values.datapower.busybox.pullPolicy }} 
           command:
             - sh
             - -c
