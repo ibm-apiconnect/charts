@@ -26,5 +26,12 @@ spec:
               serviceName: {{ template "dynamic-gateway-service.fullname" $ }}-ingress
               servicePort: {{ $.Values.datapower.apicGatewayServiceLocalPort }}
     {{- end -}}
+  {{- if .Values.ingress.gwd.enableTLS }}
+  tls:
+    {{- range $host := .Values.ingress.gwd.hosts }}
+    - hosts:
+      - {{ $host.name }}
+    {{- end }}
+  {{- end }}
 {{- end -}}
 {{- end -}}
