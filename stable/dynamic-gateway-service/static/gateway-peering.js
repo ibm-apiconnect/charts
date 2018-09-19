@@ -44,6 +44,8 @@ const TMS_PEERING_ENABLE_SSL        = process.env.TMS_PEERING_ENABLE_SSL ? proce
 const TMS_PEERING_SSL_KEY           = process.env.TMS_PEERING_SSL_KEY || 'tms_key';
 const TMS_PEERING_SSL_CERT          = process.env.TMS_PEERING_SSL_CERT || 'tms_cert';
 
+const PEERING_LOG_LEVEL               = process.env.PEERING_LOG_LEVEL || 'internal';
+
 const log = (...args) => {
   console.log(`${(new Date()).toUTCString()}:`, ...args);
 }
@@ -107,6 +109,7 @@ gateway-peering ${cfg.name}
   persistence ${cfg.persistence ? `local
   local-directory local:///tms` : 'memory'}
   enable-peer-group on
+  log-level ${PEERING_LOG_LEVEL}
 exit
 %endif%`.replace(/\n\s*\n/g, '\n');
 
