@@ -31,6 +31,9 @@ spec:
     {{- range $host := .Values.ingress.gwd.hosts }}
     - hosts:
       - {{ $host.name }}
+      {{- if $host.secretName }}
+      secretName: {{ $host.secretName }}
+      {{- end }}
     {{- end }}
   {{- end }}
 {{- end -}}
