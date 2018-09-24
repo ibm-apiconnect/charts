@@ -37,7 +37,7 @@ spec:
     release: {{ .Release.Name }}
 ---
 # Client service for connecting to any GatewayDirector instance
-# 
+#
 apiVersion: v1
 kind: Service
 metadata:
@@ -54,11 +54,37 @@ spec:
       targetPort: {{ .Values.datapower.apiGatewayLocalPort }}
       protocol: TCP
       name: api-gw-svc
-#    - port: 8080
-#      targetPort: 8080
-#      protocol: TCP
-#      name: loop-back-port
-  #publishNotReadyAddresses: true
+  selector:
+    app: {{ template "dynamic-gateway-service.name" . }}
+    release: {{ .Release.Name }}
+---
+# Loopback access service
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ template "dynamic-gateway-service.fullname" . }}-access
+  labels:
+    app: {{ template "dynamic-gateway-service.name" . }}
+spec:
+  ports:
+    - port: 8080
+      targetPort: 8080
+      protocol: TCP
+      name: loop-back-port
+    - port: {{ .Values.datapower.webGuiManagementPort }}
+      targetPort: {{ .Values.datapower.webGuiManagementPort }}
+      protocol: TCP
+      name: web-gui-management
+    - port: {{ .Values.datapower.gatewaySshPort }}
+      targetPort: {{ .Values.datapower.gatewaySshPort }}
+      protocol: TCP
+      name: gateway-ssh
+    - port: {{ .Values.datapower.restManagementPort }}
+      targetPort: {{ .Values.datapower.restManagementPort }}
+      protocol: TCP
+      name: rest-mgmt
+  publishNotReadyAddresses: true
+  type: NodePort
   selector:
     app: {{ template "dynamic-gateway-service.name" . }}
     release: {{ .Release.Name }}

@@ -10,7 +10,7 @@ datapower:
     repository: ibmcom/datapower
     tag: 7.7.1.1.300826
     pullPolicy: IfNotPresent
-    pullSecrets: 
+    pullSecrets:
     - name: datapower-pull-secrets
   env:
     # Should agree with .Values.requests.cpu if set. If not set or is 0 the env var will not be set.
@@ -38,15 +38,15 @@ datapower:
   configSequenceInterval:
   # Gateway MGMT variables
   # This value should either be 'enabled' or 'disabled'. Default is disabled
-  webGuiManagementState: "disabled"
+  webGuiManagementState: "enabled"
   webGuiManagementPort: 9090
   webGuiManagementLocalAddress: 0.0.0.0
   # This value should either be 'enabled' or 'disabled'. Default is disabled
-  gatewaySshState: "disabled"
+  gatewaySshState: "enabled"
   gatewaySshPort: 9022
   gatewaySshLocalAddress: 0.0.0.0
   # This value should either be 'enabled' or 'disabled'. Default is disabled
-  restManagementState: "disabled"
+  restManagementState: "enabled"
   restManagementPort: 5554
   restManagementLocalAddress: 0.0.0.0
   xmlManagementLocalAddress: 0.0.0.0
@@ -70,7 +70,7 @@ datapower:
     limits:
       memory: 8Gi
       cpu: 8
-      
+
 
 service:
   type: ClusterIP
@@ -80,7 +80,7 @@ service:
 # Ingress Section
 #
 
-# This value can be ingress or route 
+# This value can be ingress or route
 ingressType: "ingress"
 ingress:
   gateway:
