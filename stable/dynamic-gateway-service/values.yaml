@@ -23,14 +23,14 @@ datapower:
     tmsPeeringEnableSSL: "on"
     # Should be on or off
     enableTMS: "off"
-  replicaCount: 3
+  replicaCount: 1
   gatewayPeeringLocalPort: 16380
   gatewayPeeringMonitorPort: 26380
   tmsPeeringLocalPort: 16381
   tmsPeeringMonitorPort: 26381
   apicGatewayServiceLocalPort: 3000
   apicGatewayServiceLocalAddress: 0.0.0.0
-  apicGatewayServiceTLSSecret:
+  apicGatewayServiceTLSSecret: gw-certs
   # This value should either be 'on' or 'off'. Default is 'on'
   apicGatewayServiceV5CompatibilityMode: "on"
   apiGatewayLocalAddress: 0.0.0.0
@@ -64,9 +64,9 @@ datapower:
           storage: 10Gi
   resources:
     requests:
-      memory: 8Gi
+      memory: 4Gi
       # cpu should agree with .Values.datapower.env.workerThreads
-      cpu: 8
+      cpu: 2
     limits:
       memory: 8Gi
       cpu: 8

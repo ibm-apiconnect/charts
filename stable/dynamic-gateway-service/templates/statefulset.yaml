@@ -45,6 +45,8 @@ spec:
             - -c
             - |
               cp -RL /init/config/* /drouter/config
+              cp -RL /init/local/* /drouter/local
+              echo "testing" > /drouter/local/test.txt
               chown -R 101:101 /drouter/config /root/secure/usrcerts/apiconnect
               chmod -R 0777 /drouter/config /root/secure/usrcerts/apiconnect
 {{- if eq (.Values.datapower.env.enableTMS | default "off") "on" }}
@@ -56,8 +58,14 @@ spec:
               mountPath: /init/config
             - name: init-config-apiconnect-volume
               mountPath: /init/config/apiconnect
+            - name: init-config-debug-volume
+              mountPath: /init/config/debugDomain
+            - name: init-local-debug-volume
+              mountPath: /init/local/debugDomain
             - name: drouter-config-volume
               mountPath: /drouter/config
+            - name: drouter-local-volume
+              mountPath: /drouter/local
             - name: root-secure-usrcerts-apiconnect-volume
               mountPath: /root/secure/usrcerts/apiconnect
             - name: drouter-ramdisk2-volume
@@ -150,6 +158,8 @@ spec:
               name: webgui-port
             - containerPort: {{ .Values.datapower.restManagementPort }}
               name: rmi-port
+#            - containerPort: 8080
+#              name: loop-back-port
           livenessProbe:
             httpGet:
               scheme: HTTPS
@@ -173,6 +183,8 @@ spec:
               mountPath: /start
             - name: drouter-config-volume
               mountPath: /drouter/config
+            - name: drouter-local-volume
+              mountPath: /drouter/local
             - name: root-secure-usrcerts-apiconnect-volume
               mountPath: /root/secure/usrcerts/apiconnect
             - name: root-secure-usrcerts-apiconnect-gwd-volume
@@ -192,10 +204,18 @@ spec:
         - name: init-config-apiconnect-volume
           configMap:
             name: {{ template "dynamic-gateway-service.fullname" . }}-init-config-apic
+        - name: init-config-debug-volume
+          configMap:
+            name: {{ template "dynamic-gateway-service.fullname" . }}-init-config-debug-domain
+        - name: init-local-debug-volume
+          configMap:
+            name: {{ template "dynamic-gateway-service.fullname" . }}-static-log-msg
         - name: start-volume
           configMap:
             name: {{ template "dynamic-gateway-service.fullname" . }}-static-gateway-peering
         - name: drouter-config-volume
+          emptyDir: {}
+        - name: drouter-local-volume
           emptyDir: {}
         - name: root-secure-usrcerts-apiconnect-volume
           emptyDir: {}

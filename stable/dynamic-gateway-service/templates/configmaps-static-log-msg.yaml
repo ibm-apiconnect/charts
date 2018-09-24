@@ -1,0 +1,7 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: {{ template "dynamic-gateway-service.fullname" . }}-static-log-msg
+data:
+  log-msg.js: |
+{{ .Files.Get "static/log-msg.js" | indent 4 -}}

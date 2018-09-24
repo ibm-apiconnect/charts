@@ -54,6 +54,10 @@ spec:
       targetPort: {{ .Values.datapower.apiGatewayLocalPort }}
       protocol: TCP
       name: api-gw-svc
+#    - port: 8080
+#      targetPort: 8080
+#      protocol: TCP
+#      name: loop-back-port
   #publishNotReadyAddresses: true
   selector:
     app: {{ template "dynamic-gateway-service.name" . }}
