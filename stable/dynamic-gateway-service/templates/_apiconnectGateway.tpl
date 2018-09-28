@@ -175,6 +175,8 @@ apiconnect.cfg: |
       size 50000
       local-file logtemp:///gwd-log.log
       event apic-gw-service debug
+      event apigw debug
+      event mgmt debug
     exit
 
     crypto
@@ -392,4 +394,3 @@ apiconnect.cfg: |
 {{- end }}
 {{- end }}
 {{- end }}
-
