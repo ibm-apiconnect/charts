@@ -12,6 +12,7 @@ metadata:
     heritage: {{ .Release.Service }}
   annotations:
     ingress.kubernetes.io/ssl-passthrough: "true"
+    ingress.bluemix.net/ssl-services: ssl-service={{ template "dynamic-gateway-service.fullname" . }}-ingress
     {{- range $key, $value := .Values.ingress.gateway.annotations }}
     {{ $key }}: {{ $value | quote }}
     {{- end }}

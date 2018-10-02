@@ -39,12 +39,16 @@ spec:
       {{- end }}
       initContainers:
         - name: dpinit
-          image: busybox
+          image: "{{ .Values.datapower.busybox.repository }}:{{ .Values.datapower.busybox.tag }}"
+          imagePullPolicy: {{ .Values.datapower.busybox.pullPolicy }} 
           command:
             - sh
             - -c
             - |
               cp -RL /init/config/* /drouter/config
+{{- if .Values.datapower.adminUserSecret }}
+              sh /init/admin-user/init-admin-user.sh
+{{- end }}
               chown -R 101:101 /drouter/config /root/secure/usrcerts/apiconnect
               chmod -R 0777 /drouter/config /root/secure/usrcerts/apiconnect
 {{- if eq (.Values.datapower.env.enableTMS | default "off") "on" }}
@@ -65,6 +69,12 @@ spec:
 {{- if eq (.Values.datapower.env.enableTMS | default "off") "on" }}
             - name: tms
               mountPath: /drouter/ramdisk2/mnt/raid-volume/raid0/local
+{{- end }}
+{{- if .Values.datapower.adminUserSecret }}
+            - name: init-admin-user
+              mountPath: /init/admin-user
+            - name: init-admin-user-secret
+              mountPath: /init/admin-user-secret
 {{- end }}
       containers:
         - name: {{ .Chart.Name }}
@@ -194,6 +204,14 @@ spec:
         - name: init-config-apiconnect-volume
           configMap:
             name: {{ template "dynamic-gateway-service.fullname" . }}-init-config-apic
+{{- if .Values.datapower.adminUserSecret }}
+        - name: init-admin-user
+          configMap:
+            name: {{ template "dynamic-gateway-service.fullname" . }}-static-init-admin-user
+        - name: init-admin-user-secret
+          secret:
+            secretName: {{ .Values.datapower.adminUserSecret }}
+{{- end }}
         - name: start-volume
           configMap:
             name: {{ template "dynamic-gateway-service.fullname" . }}-static-gateway-peering
