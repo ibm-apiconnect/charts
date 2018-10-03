@@ -23,8 +23,6 @@ datapower:
     tmsPeeringEnableSSL: "on"
     # Should be on or off
     enableTMS: "off"
-    # peeringLogLevel sets log level for gateway-peering operation. Should only be internal, warning, notice, verbose, or debug.
-    peeringLogLevel: "internal"
   replicaCount: 3
   gatewayPeeringLocalPort: 16380
   gatewayPeeringMonitorPort: 26380

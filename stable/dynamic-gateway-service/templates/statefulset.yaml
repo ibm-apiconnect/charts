@@ -129,8 +129,6 @@ spec:
               value: {{ .Values.datapower.env.interactive | quote }}
             - name: "DATAPOWER_LOG_LEVEL"
               value: "6"
-            - name: "PEERING_LOG_LEVEL"
-              value: {{ .Values.datapower.env.peeringLogLevel }}
           resources:
 {{ toYaml .Values.datapower.resources | indent 12 }}
           ports:
