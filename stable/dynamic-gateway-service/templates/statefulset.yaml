@@ -87,7 +87,7 @@ spec:
               set -x
               export $(env | grep ^DATAPOWER_ | cut -d= -f1)
               /root/node /start/gateway-peering.js
-              exec /start.sh "$@"
+              exec /start.sh --log-format {{ .Values.datapower.env.defaultLogFormat }}
           stdin: true
           tty: true
           env:
