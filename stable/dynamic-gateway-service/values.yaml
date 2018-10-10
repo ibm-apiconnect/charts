@@ -50,7 +50,7 @@ datapower:
   # Notice that, when setting `password-hashed`, the value must be surrounded by single-quotes
   #
   # In all of the examples above, `.Values.datapower.adminUserSecret` should be set to 'admin-credentials' for the admin user to be configured.
-  adminUserSecert:
+  adminUserSecret:
   replicaCount: 3
   gatewayPeeringLocalPort: 16380
   gatewayPeeringMonitorPort: 26380
