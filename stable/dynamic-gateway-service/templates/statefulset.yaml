@@ -37,6 +37,16 @@ spec:
       - name: {{ .name }}
       {{- end }}
       {{- end }}
+      affinity:
+        podAntiAffinity:
+          preferredDuringSchedulingIgnoredDuringExecution:
+          - weight: 1
+            podAffinityTerm:
+              topologyKey: "kubernetes.io/hostname"
+              labelSelector:
+                matchLabels:
+                  app: {{ template "dynamic-gateway-service.name" . }}
+                  release: {{ .Release.Name }}
       initContainers:
         - name: dpinit
           image: "{{ .Values.datapower.busybox.repository }}:{{ .Values.datapower.busybox.tag }}"
