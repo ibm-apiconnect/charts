@@ -148,7 +148,7 @@ spec:
             - name: "DATAPOWER_INTERACTIVE"
               value: {{ .Values.datapower.env.interactive | quote }}
             - name: "DATAPOWER_LOG_LEVEL"
-              value: "6"
+              value: {{ .Values.datapower.env.datapowerLogLevel | quote }}
             - name: "PEERING_LOG_LEVEL"
               value: {{ .Values.datapower.env.peeringLogLevel }}
           resources:

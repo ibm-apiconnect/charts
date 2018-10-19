@@ -32,6 +32,8 @@ datapower:
     # Format type for logging. Can be json-icp, text, raw, csv, cbe, or xml
     # For ICP deployments, this format must be 'json-icp'
     defaultLogFormat: "text"
+    # Log level for DataPower. Should be 0-7
+    datapowerLogLevel: "3"
   # In order to replace the default admin credentials, the new credentials should be configured via Secret and `.Values.datapower.adminUserSecret` must be set to the name of
   # the Secret containing the admin user's credentials
   #
