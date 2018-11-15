@@ -37,7 +37,7 @@ The helm chart has the following Values that can be overridden using the install
 |-----------------------------------------------------------------|----------------------------------------------------|-----------------------|
 | `datapower.replicaCount`                                        | The replicaCount for the StatefulSet               | 3                     |
 | `datapower.image.repository`                                    | The image to use for this deployment               | ibmcom/datapower      |
-| `datapower.image.tag`                                           | The image tag to use for this deployment           | 7.7.1.1.300826        |
+| `datapower.image.tag`                                           | The image tag to use for this deployment           | 2018.4.1              |
 | `datapower.image.pullPolicy`                                    | Determines when the image should be pulled         | IfNotPresent          |
 | `datapower.env.workerThreads`                                   | Number of DataPower worker threads                 |                       |
 | `datapower.resources.limits.cpu`                                | Container CPU limit                                | 8                     |
