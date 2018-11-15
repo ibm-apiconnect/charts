@@ -8,7 +8,7 @@
 datapower:
   image:
     repository: ibmcom/datapower
-    tag: 7.7.1.1.300826
+    tag: 2018.4.1
     pullPolicy: IfNotPresent
     pullSecrets:
     - name: datapower-pull-secrets
