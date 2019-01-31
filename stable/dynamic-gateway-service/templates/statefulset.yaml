@@ -37,6 +37,12 @@ spec:
       - name: {{ .name }}
       {{- end }}
       {{- end }}
+      hostNetwork: false
+      hostPID: false
+      hostIPC: false
+      securityContext:
+        runAsNonRoot: false
+        runAsUser: 0
       affinity:
         podAntiAffinity:
           preferredDuringSchedulingIgnoredDuringExecution:
@@ -90,6 +96,15 @@ spec:
         - name: {{ .Chart.Name }}
           image: "{{ .Values.datapower.image.repository }}:{{ .Values.datapower.image.tag }}"
           imagePullPolicy: {{ .Values.datapower.image.pullPolicy }}
+          securityContext:
+            privileged: false
+            readOnlyRootFilesystem: false
+            allowPrivilegeEscalation: false
+            runAsNonRoot: true
+            runAsUser: 101
+            capabilities:
+              drop:
+              - ALL
           command:
             - sh
             - -c
