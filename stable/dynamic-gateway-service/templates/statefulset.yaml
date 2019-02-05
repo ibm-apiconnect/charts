@@ -138,6 +138,13 @@ spec:
 {{- else }}
               value: "off"
 {{- end }}
+            - name: APICONNECT_API_DEBUG_PROBE
+{{/* Enforce valid values for apiDebugProbe as 'enabled' and 'disabled' (default: 'disabled') */}}
+{{- if eq (.Values.datapower.apiDebugProbe | default "disabled") "enabled" }}
+              value: "enabled"
+{{- else }}
+              value: "disabled"
+{{- end }}
             - name: GATEWAY_PEERING_MONITOR_PORT
               value: {{ .Values.datapower.gatewayPeeringMonitorPort | quote }}
             - name: GATEWAY_PEERING_LOCAL_PORT
@@ -150,6 +157,12 @@ spec:
               value: {{ .Values.datapower.tmsPeeringLocalPort | quote }}
             - name: TMS_PEERING_ENABLE_SSL
               value: {{ .Values.datapower.env.tmsPeeringEnableSSL | quote }}
+            - name: ADP_PEERING_MONITOR_PORT
+              value: {{ .Values.datapower.apiDebugProbePeeringMonitorPort | quote }}
+            - name: ADP_PEERING_LOCAL_PORT
+              value: {{ .Values.datapower.apiDebugProbePeeringLocalPort | quote }}
+            - name: ADP_PEERING_ENABLE_SSL
+              value: {{ .Values.datapower.env.apiDebugProbePeeringEnableSSL | quote }}
 {{- if .Values.datapower.env.workerThreads }}
 {{- if gt .Values.datapower.env.workerThreads 0.0 }}
             - name: DATAPOWER_WORKER_THREADS
@@ -177,6 +190,10 @@ spec:
               name: tms-local-port
             - containerPort: {{ .Values.datapower.tmsPeeringMonitorPort }}
               name: tms-monit-port
+            - containerPort: {{ .Values.datapower.apiDebugProbePeeringLocalPort }}
+              name: adp-local-port
+            - containerPort: {{ .Values.datapower.apiDebugProbePeeringMonitorPort }}
+              name: adp-monit-port
             - containerPort: {{ .Values.datapower.apicGatewayServiceLocalPort }}
               name: apic-gw-mgmt
             - containerPort: {{ .Values.datapower.apiGatewayLocalPort }}

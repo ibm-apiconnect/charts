@@ -24,6 +24,8 @@ datapower:
     # Should be on or off
     peeringEnableSSL: "on"
     # Should be on or off
+    apiDebugProbePeeringEnableSSL: "on"
+    # Should be on or off
     tmsPeeringEnableSSL: "on"
     # Should be on or off
     enableTMS: "off"
@@ -64,6 +66,13 @@ datapower:
   apicGatewayServiceLocalPort: 3000
   apicGatewayServiceLocalAddress: 0.0.0.0
   apicGatewayServiceTLSSecret:
+  # This value should either be 'enabled' or 'disabled'. Default is disabled
+  apiDebugProbe: "disabled"
+  apiDebugProbeMaxRecords: 1000
+  # api-debugprobe expiration in minutes
+  apiDebugProbeExpiration: 60
+  apiDebugProbePeeringLocalPort: 16382
+  apiDebugProbePeeringMonitorPort: 26382
   # This value should either be 'on' or 'off'. Default is 'on'
   apicGatewayServiceV5CompatibilityMode: "on"
   apiGatewayLocalAddress: 0.0.0.0
