@@ -27,6 +27,7 @@ const APICONNECT_K8S_PEERS_SVC_FQDN = process.env.APICONNECT_K8S_PEERS_SVC_FQDN 
 const APICONNECT_DATAPOWER_DOMAIN   = process.env.APICONNECT_DATAPOWER_DOMAIN || 'apiconnect';
 const APICONNECT_V5_COMPAT_MODE     = process.env.APICONNECT_V5_COMPAT_MODE || 'on';
 const APICONNECT_ENABLE_TMS         = process.env.APICONNECT_ENABLE_TMS || 'off';
+const APICONNECT_API_DEBUG_PROBE    = process.env.APICONNECT_API_DEBUG_PROBE || 'off';
 
 const GATEWAY_PEERING_CONFIG_NAME   = process.env.GATEWAY_PEERING_CONFIG_NAME || 'gwd';
 const GATEWAY_PEERING_LOCAL_ADDRESS = process.env.GATEWAY_PEERING_LOCAL_ADDRESS || 'eth0_ipv4_1';
@@ -43,6 +44,14 @@ const TMS_PEERING_MONITOR_PORT      = process.env.TMS_PEERING_MONITOR_PORT || '2
 const TMS_PEERING_ENABLE_SSL        = process.env.TMS_PEERING_ENABLE_SSL ? process.env.TMS_PEERING_ENABLE_SSL !== 'off' : GATEWAY_PEERING_ENABLE_SSL;
 const TMS_PEERING_SSL_KEY           = process.env.TMS_PEERING_SSL_KEY || 'tms_key';
 const TMS_PEERING_SSL_CERT          = process.env.TMS_PEERING_SSL_CERT || 'tms_cert';
+
+const ADP_PEERING_CONFIG_NAME       = process.env.ADP_PEERING_CONFIG_NAME || 'api-probe';
+const ADP_PEERING_LOCAL_ADDRESS     = process.env.ADP_PEERING_LOCAL_ADDRESS || 'eth0_ipv4_1';
+const ADP_PEERING_LOCAL_PORT        = process.env.ADP_PEERING_LOCAL_PORT || '15382';
+const ADP_PEERING_MONITOR_PORT      = process.env.ADP_PEERING_MONITOR_PORT || '25382';
+const ADP_PEERING_ENABLE_SSL        = process.env.ADP_PEERING_ENABLE_SSL ? process.env.ADP_PEERING_ENABLE_SSL !== 'off' : GATEWAY_PEERING_ENABLE_SSL;
+const ADP_PEERING_SSL_KEY           = process.env.ADP_PEERING_SSL_KEY || 'api_probe_key';
+const ADP_PEERING_SSL_CERT          = process.env.ADP_PEERING_SSL_CERT || 'api_probe_cert';
 
 const PEERING_LOG_LEVEL             = process.env.PEERING_LOG_LEVEL || 'internal';
 
@@ -184,6 +193,24 @@ exit
 
       await writeFile(tmsConfigPath, tmsConfig);
       log(`Generated ${tmsConfigPath}\n${tmsConfig}`);
+    }
+
+    if (APICONNECT_API_DEBUG_PROBE === 'enabled') {
+      let adpConfig = generateGatewayPeeringConfig({
+        name: ADP_PEERING_CONFIG_NAME,
+        localAddress: ADP_PEERING_LOCAL_ADDRESS,
+        localPort: ADP_PEERING_LOCAL_PORT,
+        monitorPort: ADP_PEERING_MONITOR_PORT,
+        priority: priority,
+        peers: peers,
+        enableSSL: ADP_PEERING_ENABLE_SSL,
+        sslKey: ADP_PEERING_SSL_KEY,
+        sslCert: ADP_PEERING_SSL_CERT
+      });
+
+      let adpConfigPath = `/drouter/config/${APICONNECT_DATAPOWER_DOMAIN}/api-probe-peering.cfg`;
+      await writeFile(adpConfigPath, adpConfig);
+      log(`Generated ${adpConfigPath}\n${adpConfig}`);
     }
 
     if (ordinal > 0) {

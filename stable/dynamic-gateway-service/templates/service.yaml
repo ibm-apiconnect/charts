@@ -30,6 +30,16 @@ spec:
       protocol: TCP
       name: tms-monit-port
 {{- end }}
+{{- if eq (.Values.datapower.apiDebugProbe | default "disabled") "enabled" }}
+    - port: {{ .Values.datapower.apiDebugProbePeeringLocalPort }}
+      targetPort: {{ .Values.datapower.apiDebugProbePeeringLocalPort }}
+      protocol: TCP
+      name: adp-local-port
+    - port: {{ .Values.datapower.apiDebugProbePeeringMonitorPort }}
+      targetPort: {{ .Values.datapower.apiDebugProbePeeringMonitorPort }}
+      protocol: TCP
+      name: adp-monit-port
+{{- end }}
   clusterIP: None
   publishNotReadyAddresses: true
   selector:
