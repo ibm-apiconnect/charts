@@ -29,15 +29,18 @@ auto-startup.cfg: |
       ssl-config-type server
     exit
 
-{{- if .Values.datapower.restManagementState }}
-{{- if eq .Values.datapower.restManagementState "enabled" }}
+{{- if or (eq (.Values.datapower.restManagementState | default "disabled") "enabled") (eq (.Values.datapower.apiDebugProbe | default "disabled") "enabled") }}
+{{  if eq (.Values.datapower.restManagementState | default "disabled") "enabled" }}
+    # REST Management explicitly enabled
+{{  else }}
+    # REST Management implicitly enabled because an API Debug Probe is enabled
+{{- end }}
     rest-mgmt
-      admin-state {{ .Values.datapower.restManagementState }}
+      admin-state enabled
       local-address {{ .Values.datapower.restManagementLocalAddress }}
       port {{ .Values.datapower.restManagementPort }}
       ssl-config-type server
     exit
-{{- end }}
 {{- end }}
 
 {{- if .Values.datapower.webGuiManagementState }}
@@ -377,6 +380,37 @@ apiconnect.cfg: |
       gateway-peering tms
     exit
 {{- end }}
+{{- end }}
+
+{{- if eq (.Values.datapower.apiDebugProbe | default "disabled") "enabled" }}
+{{- if ne (.Values.datapower.env.apiDebugProbePeeringEnableSSL | default "on") "off" }}
+    crypto
+      key api_probe_key cert:///gwd/peering_key.pem
+    exit
+
+    crypto
+      certificate api_probe_cert cert:///gwd/peering_cert.pem
+    exit
+{{- end }}
+
+    %if% available "include-config"
+
+    include-config "api-probe-peering-apic"
+      config-url "config:///api-probe-peering.cfg"
+      auto-execute
+      no interface-detection
+    exit
+
+    exec "config:///api-probe-peering.cfg"
+
+    %endif%
+
+    api-debugprobe
+      admin-state enabled
+      max-records {{ .Values.datapower.apiDebugProbeMaxRecords }}
+      expiration {{ .Values.datapower.apiDebugProbeExpiration }}
+      gateway-peering api-probe
+    exit
 {{- end }}
 
 {{- if .Values.datapower.apicGatewayServiceV5CompatibilityMode }}
