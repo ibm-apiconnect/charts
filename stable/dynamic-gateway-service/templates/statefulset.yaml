@@ -38,6 +38,9 @@ spec:
       {{- end }}
       {{- end }}
       affinity:
+{{- if .Values.affinity }}
+{{ toYaml .Values.affinity | indent 8 }}
+{{- else }}
         podAntiAffinity:
           preferredDuringSchedulingIgnoredDuringExecution:
           - weight: 1
@@ -47,6 +50,7 @@ spec:
                 matchLabels:
                   app: {{ template "dynamic-gateway-service.name" . }}
                   release: {{ .Release.Name }}
+{{- end }}
       initContainers:
         - name: dpinit
           image: "{{ .Values.datapower.busybox.repository }}:{{ .Values.datapower.busybox.tag }}"
