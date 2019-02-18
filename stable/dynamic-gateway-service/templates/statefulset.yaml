@@ -104,11 +104,24 @@ spec:
             privileged: false
             readOnlyRootFilesystem: false
             allowPrivilegeEscalation: false
+# Dynamically increase the user permissions of the DataPower container when SSH is enabled.
+{{- if eq .Values.datapower.gatewaySshState "enabled" }}
+            runAsNonRoot: false
+            runAsUser: 0
+{{- else }}
             runAsNonRoot: true
             runAsUser: 101
+{{- end }}
             capabilities:
               drop:
               - ALL
+# Add capabilities needed for SSH only when SSH is enabled
+{{- if eq .Values.datapower.gatewaySshState "enabled" }}
+              add:
+              - SETGID
+              - SETUID
+              - SYS_CHROOT
+{{- end }}
           command:
             - sh
             - -c
