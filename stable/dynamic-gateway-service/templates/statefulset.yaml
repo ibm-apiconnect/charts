@@ -233,7 +233,7 @@ spec:
           readinessProbe:
             httpGet:
               scheme: HTTPS
-              path: /health
+              path: /ready
               port: apic-gw-mgmt
             initialDelaySeconds: 120
             timeoutSeconds: 5
