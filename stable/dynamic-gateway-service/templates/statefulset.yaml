@@ -27,6 +27,25 @@ spec:
         prometheus.io/port: '63512'
         prometheus.io/target: '127.0.0.1:{{ .Values.datapower.snmpPort }}'
         prometheus.io/module: 'dpStatusMIB'
+{{- with .Values.datapower }}
+{{- if .licenseVersion }}
+{{- if or (eq .licenseVersion "Production") (eq .licenseVersion "Nonproduction") (eq .licenseVersion "Developers") }}
+        productFlexpointBundle: "{{ .flexpointBundle }}"
+        productMetric: "PROCESSOR_VALUE_UNIT"
+        productVersion: "{{ .image.tag }}"
+  {{- if eq .licenseVersion "Production" }}
+        productID: '887a7b80dd7b40c9b978ff085230604e'
+        productChargedContainers: "all"
+  {{- else if eq .licenseVersion "Nonproduction" }}
+        productID: 'bd624448e8484592879f2e1a950686bd'
+        productChargedContainers: "all"
+  {{- else }}
+        productID: 'IBMDataPowerGatewayVirtualEdition_{{ .image.tag }}_Developers'
+        productChargedContainers: ""
+  {{- end }}
+{{- end }}
+{{- end }}
+{{- end }}
       labels:
         app: {{ template "dynamic-gateway-service.name" . }}
         release: {{ .Release.Name }}
@@ -132,10 +151,24 @@ spec:
             - sh
             - -c
             - |
+{{- with .Values.datapower }}
+{{- if .licenseVersion }}
+{{- if or (eq .licenseVersion "Production") (eq .licenseVersion "Nonproduction") (eq .licenseVersion "Developers") }}
               set -x
               export $(env | grep ^DATAPOWER_ | cut -d= -f1)
               /root/node /start/gateway-peering.js
-              exec /start.sh --log-format {{ .Values.datapower.env.defaultLogFormat }}
+              exec /start.sh --log-format {{ .env.defaultLogFormat }}
+{{- else }}
+              echo "ERROR: USER MUST SPECIFY A LICENSE VERSION"
+              echo "Please set datapower.licenseVersion"
+              exit 1
+{{- end }}
+{{- else }}
+              echo "ERROR: USER MUST SPECIFY A LICENSE VERSION"
+              echo "Please set datapower.licenseVersion"
+              exit 1
+{{- end }}
+{{- end }}
           stdin: true
           tty: true
           env:
