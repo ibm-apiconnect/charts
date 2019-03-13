@@ -67,6 +67,7 @@ The helm chart has the following Values that can be overridden using the install
 | `datapower.flexpointBundle`                                     | Flexpoint Bundle type for ILMT scanning                  | N/A                   |
 | `datapower.storage.tmsPeering.accessModes`                      | Access Modes for the Token Management Service Disk       | [ReadWriteOnce]       |
 | `datapower.storage.tmsPeering.resources.requests.storage`       | Size for the Token Management Service Disk               | 10Gi                  |
+| `datapower.customDatapowerConfig`                               | Name of ConfigMap with one or more DataPower .cfg files  |                       |
 | `service.type`                                                  | Service type                                             | ClusterIP             |
 | `ingressType`                                                   | Type of ingress controller                               | ingress               |
 | `ingress.gateway.enabled`                                       | API gateway ingress enabled                              | true                  |

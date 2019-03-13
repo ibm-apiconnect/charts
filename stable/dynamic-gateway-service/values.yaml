@@ -61,6 +61,7 @@ datapower:
   #
   # In all of the examples above, `.Values.datapower.adminUserSecret` should be set to 'admin-credentials' for the admin user to be configured.
   adminUserSecret:
+  customDatapowerConfig:
   replicaCount: 3
   gatewayPeeringLocalPort: 16380
   gatewayPeeringMonitorPort: 26380
