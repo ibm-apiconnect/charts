@@ -341,7 +341,11 @@ apiconnect.cfg: |
 {{- else }}
       v5-compatibility-mode on
 {{- end }}
+{{- if .Values.datapower.customDatapowerConfig }}
+      admin-state disabled
+{{- else }}
       admin-state enabled
+{{- end }}
       ssl-client gwd_client
       ssl-server gwd_server
       local-address {{ .Values.datapower.apicGatewayServiceLocalAddress }}
@@ -425,5 +429,23 @@ apiconnect.cfg: |
       optimize-for-apic on
     exit
 {{- end }}
+{{- end }}
+{{- if .Values.datapower.customDatapowerConfig }}
+
+    %if% available "include-config"
+
+    include-config "custom-config-cfg"
+      config-url "config:///custom-config.cfg"
+      auto-execute
+      no interface-detection
+    exit
+
+    exec "config:///custom-config.cfg"
+
+    %endif%
+
+    apic-gw-service
+      admin-state enabled
+    exit
 {{- end }}
 {{- end }}

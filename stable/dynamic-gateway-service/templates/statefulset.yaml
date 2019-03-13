@@ -88,6 +88,9 @@ spec:
 {{- if .Values.datapower.adminUserSecret }}
               sh /init/admin-user/init-admin-user.sh
 {{- end }}
+{{- if .Values.datapower.customDatapowerConfig }}
+              cat /init/custom-config/*.cfg > /drouter/config/apiconnect/custom-config.cfg
+{{- end }}
 {{/* If SSH is enabled, DP runs as root. Only chown if SSH is not enabled */}}
 {{- if ne .Values.datapower.gatewaySshState "enabled" }}
               chown -R 101:101 /drouter/config /root/secure/usrcerts/apiconnect
@@ -120,6 +123,10 @@ spec:
               mountPath: /init/admin-user
             - name: init-admin-user-secret
               mountPath: /init/admin-user-secret
+{{- end }}
+{{- if .Values.datapower.customDatapowerConfig }}
+            - name: init-custom-config-volume
+              mountPath: /init/custom-config
 {{- end }}
       containers:
         - name: {{ .Chart.Name }}
@@ -309,6 +316,11 @@ spec:
         - name: init-admin-user-secret
           secret:
             secretName: {{ .Values.datapower.adminUserSecret }}
+{{- end }}
+{{- if .Values.datapower.customDatapowerConfig }}
+        - name: init-custom-config-volume
+          configMap:
+            name: {{ .Values.datapower.customDatapowerConfig }}
 {{- end }}
         - name: start-volume
           configMap:
