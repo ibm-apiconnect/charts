@@ -27,24 +27,43 @@ spec:
         prometheus.io/port: '63512'
         prometheus.io/target: '127.0.0.1:{{ .Values.datapower.snmpPort }}'
         prometheus.io/module: 'dpStatusMIB'
-{{- with .Values.datapower }}
-{{- if .licenseVersion }}
-{{- if or (eq .licenseVersion "Production") (eq .licenseVersion "Nonproduction") (eq .licenseVersion "Developers") }}
+{{- if .Values.cip }}
+  {{- with .Values.datapower }}
+    {{- if .licenseVersion }}
+      {{- if or (eq .licenseVersion "Production") (eq .licenseVersion "Nonproduction") (eq .licenseVersion "Developers") }}
+        productVersion: "{{ .image.tag }}"
+        {{- if eq .licenseVersion "Production" }}
+        productID: 'DPGateway_5737_I89_ICIP_chargeable'
+        productName: 'IBM Cloud Integration Platform - DataPower Gateway (Chargeable)'
+        {{- else if eq .licenseVersion "Nonproduction" }}
+        productID: 'DPGateway_5737_I89_ICIP_nonProd_chargeable'
+        productName: 'IBM Cloud Integration Platform (non-production) - DataPower Gateway (Chargeable)'
+        {{- else }}
+        productID: 'IBMDataPowerGatewayVirtualEdition_{{ .image.tag }}_Developers'
+        {{- end }}
+      {{- end }}
+    {{- end }}
+  {{- end }}
+{{- else }}
+  {{- with .Values.datapower }}
+    {{- if .licenseVersion }}
+      {{- if or (eq .licenseVersion "Production") (eq .licenseVersion "Nonproduction") (eq .licenseVersion "Developers") }}
         productFlexpointBundle: "{{ .flexpointBundle }}"
         productMetric: "PROCESSOR_VALUE_UNIT"
         productVersion: "{{ .image.tag }}"
-  {{- if eq .licenseVersion "Production" }}
+        {{- if eq .licenseVersion "Production" }}
         productID: '887a7b80dd7b40c9b978ff085230604e'
         productChargedContainers: "all"
-  {{- else if eq .licenseVersion "Nonproduction" }}
+        {{- else if eq .licenseVersion "Nonproduction" }}
         productID: 'bd624448e8484592879f2e1a950686bd'
         productChargedContainers: "all"
-  {{- else }}
+        {{- else }}
         productID: 'IBMDataPowerGatewayVirtualEdition_{{ .image.tag }}_Developers'
         productChargedContainers: ""
+        {{- end }}
+      {{- end }}
+    {{- end }}
   {{- end }}
-{{- end }}
-{{- end }}
 {{- end }}
       labels:
         app: {{ template "dynamic-gateway-service.name" . }}
