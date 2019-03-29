@@ -172,6 +172,7 @@ spec:
               - SETGID
               - SETUID
               - SYS_CHROOT
+              - DAC_OVERRIDE
 {{- end }}
           command:
             - sh
