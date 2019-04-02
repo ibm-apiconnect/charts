@@ -35,6 +35,7 @@ The helm chart has the following Values that can be overridden using the install
 
 | Value                                                           | Description                                              | Default               |
 |-----------------------------------------------------------------|----------------------------------------------------------|-----------------------|
+| `datapower.licenseVersion`                                      | License version of DataPower to be deployed              | N/A                   |
 | `datapower.replicaCount`                                        | The replicaCount for the StatefulSet                     | 3                     |
 | `datapower.image.repository`                                    | The image to use for this deployment                     | ibmcom/datapower      |
 | `datapower.image.tag`                                           | The image tag to use for this deployment                 | 2018.4.1              |
@@ -63,8 +64,10 @@ The helm chart has the following Values that can be overridden using the install
 | `datapower.xmlManagementLocalPort`                              | XML Management port                                      | 5550                  |
 | `datapower.snmpState`                                           | SNMP Service State(used for Prometheus monitoring)       | enabled               |
 | `datapower.snmpPort`                                            | SNMP Service Port(used for Prometheus monitoring)        | 1161                  |
+| `datapower.flexpointBundle`                                     | Flexpoint Bundle type for ILMT scanning                  | N/A                   |
 | `datapower.storage.tmsPeering.accessModes`                      | Access Modes for the Token Management Service Disk       | [ReadWriteOnce]       |
 | `datapower.storage.tmsPeering.resources.requests.storage`       | Size for the Token Management Service Disk               | 10Gi                  |
+| `datapower.customDatapowerConfig`                               | Name of ConfigMap with one or more DataPower .cfg files  |                       |
 | `service.type`                                                  | Service type                                             | ClusterIP             |
 | `ingressType`                                                   | Type of ingress controller                               | ingress               |
 | `ingress.gateway.enabled`                                       | API gateway ingress enabled                              | true                  |

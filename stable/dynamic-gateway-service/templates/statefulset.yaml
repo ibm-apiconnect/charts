@@ -27,6 +27,44 @@ spec:
         prometheus.io/port: '63512'
         prometheus.io/target: '127.0.0.1:{{ .Values.datapower.snmpPort }}'
         prometheus.io/module: 'dpStatusMIB'
+{{- if .Values.cip }}
+  {{- with .Values.datapower }}
+    {{- if .licenseVersion }}
+      {{- if or (eq .licenseVersion "Production") (eq .licenseVersion "Nonproduction") (eq .licenseVersion "Developers") }}
+        productVersion: "{{ .image.tag }}"
+        {{- if eq .licenseVersion "Production" }}
+        productID: 'DPGateway_5737_I89_ICIP_chargeable'
+        productName: 'IBM Cloud Integration Platform - DataPower Gateway (Chargeable)'
+        {{- else if eq .licenseVersion "Nonproduction" }}
+        productID: 'DPGateway_5737_I89_ICIP_nonProd_chargeable'
+        productName: 'IBM Cloud Integration Platform (non-production) - DataPower Gateway (Chargeable)'
+        {{- else }}
+        productID: 'IBMDataPowerGatewayVirtualEdition_{{ .image.tag }}_Developers'
+        {{- end }}
+      {{- end }}
+    {{- end }}
+  {{- end }}
+{{- else }}
+  {{- with .Values.datapower }}
+    {{- if .licenseVersion }}
+      {{- if or (eq .licenseVersion "Production") (eq .licenseVersion "Nonproduction") (eq .licenseVersion "Developers") }}
+        productFlexpointBundle: "{{ .flexpointBundle }}"
+        productMetric: "PROCESSOR_VALUE_UNIT"
+        productVersion: "{{ .image.tag }}"
+        {{- if eq .licenseVersion "Production" }}
+        productID: '887a7b80dd7b40c9b978ff085230604e'
+        productChargedContainers: "all"
+        {{- else if eq .licenseVersion "Nonproduction" }}
+        productID: 'bd624448e8484592879f2e1a950686bd'
+        productChargedContainers: "all"
+        {{- else }}
+        productID: 'IBMDataPowerGatewayVirtualEdition_{{ .image.tag }}_Developers'
+        productChargedContainers: ""
+        {{- end }}
+      {{- end }}
+    {{- end }}
+  {{- end }}
+{{- end }}
       labels:
         app: {{ template "dynamic-gateway-service.name" . }}
         release: {{ .Release.Name }}
@@ -69,10 +107,19 @@ spec:
 {{- if .Values.datapower.adminUserSecret }}
               sh /init/admin-user/init-admin-user.sh
 {{- end }}
+{{- if .Values.datapower.customDatapowerConfig }}
+              cat /init/custom-config/*.cfg > /drouter/config/apiconnect/custom-config.cfg
+{{- end }}
+{{/* If SSH is enabled, DP runs as root. Only chown if SSH is not enabled */}}
+{{- if ne .Values.datapower.gatewaySshState "enabled" }}
               chown -R 101:101 /drouter/config /root/secure/usrcerts/apiconnect
+{{- end }}
               chmod -R 0777 /drouter/config /root/secure/usrcerts/apiconnect
 {{- if eq (.Values.datapower.env.enableTMS | default "off") "on" }}
+{{/* If SSH is enabled, DP runs as root. Only chown if SSH is not enabled */}}
+{{- if ne .Values.datapower.gatewaySshState "enabled" }}
               find /drouter/ramdisk2/mnt -type d -exec chown 101:101 {} \;
+{{- end }}
               find /drouter/ramdisk2/mnt -type d -exec chmod 0755 {} \;
 {{- end }}
           volumeMounts:
@@ -95,6 +142,10 @@ spec:
               mountPath: /init/admin-user
             - name: init-admin-user-secret
               mountPath: /init/admin-user-secret
+{{- end }}
+{{- if .Values.datapower.customDatapowerConfig }}
+            - name: init-custom-config-volume
+              mountPath: /init/custom-config
 {{- end }}
       containers:
         - name: {{ .Chart.Name }}
@@ -121,15 +172,30 @@ spec:
               - SETGID
               - SETUID
               - SYS_CHROOT
+              - DAC_OVERRIDE
 {{- end }}
           command:
             - sh
             - -c
             - |
+{{- with .Values.datapower }}
+{{- if .licenseVersion }}
+{{- if or (eq .licenseVersion "Production") (eq .licenseVersion "Nonproduction") (eq .licenseVersion "Developers") }}
               set -x
               export $(env | grep ^DATAPOWER_ | cut -d= -f1)
               /root/node /start/gateway-peering.js
-              exec /start.sh --log-format {{ .Values.datapower.env.defaultLogFormat }}
+              exec /start.sh --log-format {{ .env.defaultLogFormat }}
+{{- else }}
+              echo "ERROR: USER MUST SPECIFY A LICENSE VERSION"
+              echo "Please set datapower.licenseVersion"
+              exit 1
+{{- end }}
+{{- else }}
+              echo "ERROR: USER MUST SPECIFY A LICENSE VERSION"
+              echo "Please set datapower.licenseVersion"
+              exit 1
+{{- end }}
+{{- end }}
           stdin: true
           tty: true
           env:
@@ -270,6 +336,11 @@ spec:
         - name: init-admin-user-secret
           secret:
             secretName: {{ .Values.datapower.adminUserSecret }}
+{{- end }}
+{{- if .Values.datapower.customDatapowerConfig }}
+        - name: init-custom-config-volume
+          configMap:
+            name: {{ .Values.datapower.customDatapowerConfig }}
 {{- end }}
         - name: start-volume
           configMap:

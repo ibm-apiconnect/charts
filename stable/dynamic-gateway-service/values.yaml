@@ -6,6 +6,9 @@
 # gateway section
 #
 datapower:
+  # License version of DataPower. MUST be included to deploy.
+  # Accepts Developers, Production, and Nonproduction.
+  licenseVersion:
   image:
     repository: ibmcom/datapower
     tag: 2018.4.1
@@ -58,6 +61,7 @@ datapower:
   #
   # In all of the examples above, `.Values.datapower.adminUserSecret` should be set to 'admin-credentials' for the admin user to be configured.
   adminUserSecret:
+  customDatapowerConfig:
   replicaCount: 3
   gatewayPeeringLocalPort: 16380
   gatewayPeeringMonitorPort: 26380
@@ -97,6 +101,7 @@ datapower:
   snmpState: "enabled"
   snmpLocalAddress: 0.0.0.0
   snmpPort: 1161
+  flexpointBundle:
   storage:
     tmsPeering:
       accessModes:
