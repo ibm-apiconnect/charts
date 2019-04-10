@@ -120,7 +120,7 @@ spec:
 {{- if ne .Values.datapower.gatewaySshState "enabled" }}
               find /drouter/ramdisk2/mnt -type d -exec chown 101:101 {} \;
 {{- end }}
-              find /drouter/ramdisk2/mnt -type d -exec chmod 0755 {} \;
+              find /drouter/ramdisk2/mnt -type d -exec chmod 0777 {} \;
 {{- end }}
           volumeMounts:
             - name: init-config-volume
