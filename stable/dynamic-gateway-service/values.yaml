@@ -117,10 +117,17 @@ datapower:
     limits:
       memory: 8Gi
       cpu: 8
-
-
 service:
   type: ClusterIP
+
+
+#-----------------------------------------------------------------------------
+# DataPower Monitor Section
+#
+datapowerMonitor:
+  image:
+    repository:
+    tag:
 
 
 #-----------------------------------------------------------------------------
