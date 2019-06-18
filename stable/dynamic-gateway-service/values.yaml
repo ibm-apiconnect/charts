@@ -32,6 +32,12 @@ datapower:
     tmsPeeringEnableSSL: "on"
     # Should be on or off
     enableTMS: "off"
+    # Dedicated rate-limit peering
+    # Should be on or off
+    dedicatedRateLimitPeering: "off"
+    # Dedicated subscriptions peering
+    # Should be on or off
+    dedicatedSubscriptionsPeering: "off"
     # peeringLogLevel sets log level for gateway-peering operation. Should only be internal, warning, notice, verbose, or debug.
     peeringLogLevel: "internal"
     # Format type for logging. Can be json-icp, text, raw, csv, cbe, or xml
@@ -67,6 +73,12 @@ datapower:
   gatewayPeeringMonitorPort: 26380
   tmsPeeringLocalPort: 16381
   tmsPeeringMonitorPort: 26381
+  apiDebugProbePeeringLocalPort: 16382
+  apiDebugProbePeeringMonitorPort: 26382
+  rlPeeringLocalPort: 16383
+  rlPeeringMonitorPort: 26383
+  subsPeeringLocalPort: 16384
+  subsPeeringMonitorPort: 26384
   apicGatewayServiceLocalPort: 3000
   apicGatewayServiceLocalAddress: 0.0.0.0
   apicGatewayServiceTLSSecret:
@@ -75,8 +87,6 @@ datapower:
   apiDebugProbeMaxRecords: 1000
   # api-debugprobe expiration in minutes
   apiDebugProbeExpiration: 60
-  apiDebugProbePeeringLocalPort: 16382
-  apiDebugProbePeeringMonitorPort: 26382
   # This value should either be 'on' or 'off'. Default is 'on'
   apicGatewayServiceV5CompatibilityMode: "on"
   apiGatewayLocalAddress: 0.0.0.0

@@ -228,6 +228,20 @@ spec:
 {{- else }}
               value: "disabled"
 {{- end }}
+            - name: APICONNECT_DEDICATED_RL_PEERING
+{{/* Enforce valid values for dedicatedRateLimitPeering as 'on' and 'off' (default: 'off') */}}
+{{- if eq (.Values.datapower.env.dedicatedRateLimitPeering | default "off") "on" }}
+              value: "on"
+{{- else }}
+              value: "off"
+{{- end }}
+            - name: APICONNECT_DEDICATED_SUBS_PEERING
+{{/* Enforce valid values for dedicatedSubscriptionsPeering as 'on' and 'off' (default: 'off') */}}
+{{- if eq (.Values.datapower.env.dedicatedSubscriptionsPeering | default "off") "on" }}
+              value: "on"
+{{- else }}
+              value: "off"
+{{- end }}
             - name: GATEWAY_PEERING_MONITOR_PORT
               value: {{ .Values.datapower.gatewayPeeringMonitorPort | quote }}
             - name: GATEWAY_PEERING_LOCAL_PORT
@@ -246,6 +260,18 @@ spec:
               value: {{ .Values.datapower.apiDebugProbePeeringLocalPort | quote }}
             - name: ADP_PEERING_ENABLE_SSL
               value: {{ .Values.datapower.env.apiDebugProbePeeringEnableSSL | quote }}
+            - name: RL_PEERING_MONITOR_PORT
+              value: {{ .Values.datapower.rlPeeringMonitorPort | quote }}
+            - name: RL_PEERING_LOCAL_PORT
+              value: {{ .Values.datapower.rlPeeringLocalPort | quote }}
+            - name: RL_PEERING_ENABLE_SSL
+              value: {{ .Values.datapower.env.peeringEnableSSL | quote }}
+            - name: SUBS_PEERING_MONITOR_PORT
+              value: {{ .Values.datapower.subsPeeringMonitorPort | quote }}
+            - name: SUBS_PEERING_LOCAL_PORT
+              value: {{ .Values.datapower.subsPeeringLocalPort | quote }}
+            - name: SUBS_PEERING_ENABLE_SSL
+              value: {{ .Values.datapower.env.peeringEnableSSL | quote }}
 {{- if .Values.datapower.env.workerThreads }}
 {{- if gt .Values.datapower.env.workerThreads 0.0 }}
             - name: DATAPOWER_WORKER_THREADS
@@ -269,6 +295,14 @@ spec:
               name: peer-local-port
             - containerPort: {{ .Values.datapower.gatewayPeeringMonitorPort }}
               name: peer-monit-port
+            - containerPort: {{ .Values.datapower.rlPeeringLocalPort }}
+              name: rl-local-port
+            - containerPort: {{ .Values.datapower.rlPeeringMonitorPort }}
+              name: rl-monit-port
+            - containerPort: {{ .Values.datapower.subsPeeringLocalPort }}
+              name: subs-local-port
+            - containerPort: {{ .Values.datapower.subsPeeringMonitorPort }}
+              name: subs-monit-port
             - containerPort: {{ .Values.datapower.tmsPeeringLocalPort }}
               name: tms-local-port
             - containerPort: {{ .Values.datapower.tmsPeeringMonitorPort }}

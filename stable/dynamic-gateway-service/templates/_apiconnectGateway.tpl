@@ -127,6 +127,26 @@ auto-startup.cfg: |
 {{- end }}
 {{- end }}
 
+{{- if eq (.Values.datapower.env.dedicatedRateLimitPeering | default "off") "on" }}
+    crypto
+      key rate_limit_key cert:///apiconnect/gwd/peering_key.pem
+    exit
+
+    crypto
+      certificate rate_limit_cert cert:///apiconnect/gwd/peering_cert.pem
+    exit
+{{- end }}
+
+{{- if eq (.Values.datapower.env.dedicatedSubscriptionsPeering | default "off") "on" }}
+    crypto
+      key subs_key cert:///apiconnect/gwd/peering_key.pem
+    exit
+
+    crypto
+      certificate subs_cert cert:///apiconnect/gwd/peering_cert.pem
+    exit
+{{- end }}
+
     domain apiconnect
       visible-domain default
     exit

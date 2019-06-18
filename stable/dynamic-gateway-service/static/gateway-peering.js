@@ -28,6 +28,8 @@ const APICONNECT_DATAPOWER_DOMAIN   = process.env.APICONNECT_DATAPOWER_DOMAIN ||
 const APICONNECT_V5_COMPAT_MODE     = process.env.APICONNECT_V5_COMPAT_MODE || 'on';
 const APICONNECT_ENABLE_TMS         = process.env.APICONNECT_ENABLE_TMS || 'off';
 const APICONNECT_API_DEBUG_PROBE    = process.env.APICONNECT_API_DEBUG_PROBE || 'off';
+const APICONNECT_DEDICATED_RL_PEERING   = process.env.APICONNECT_DEDICATED_RL_PEERING || 'off';
+const APICONNECT_DEDICATED_SUBS_PEERING = process.env.APICONNECT_DEDICATED_SUBS_PEERING || 'off';
 
 const GATEWAY_PEERING_CONFIG_NAME   = process.env.GATEWAY_PEERING_CONFIG_NAME || 'gwd';
 const GATEWAY_PEERING_LOCAL_ADDRESS = process.env.GATEWAY_PEERING_LOCAL_ADDRESS || 'eth0_ipv4_1';
@@ -52,6 +54,22 @@ const ADP_PEERING_MONITOR_PORT      = process.env.ADP_PEERING_MONITOR_PORT || '2
 const ADP_PEERING_ENABLE_SSL        = process.env.ADP_PEERING_ENABLE_SSL ? process.env.ADP_PEERING_ENABLE_SSL !== 'off' : GATEWAY_PEERING_ENABLE_SSL;
 const ADP_PEERING_SSL_KEY           = process.env.ADP_PEERING_SSL_KEY || 'api_probe_key';
 const ADP_PEERING_SSL_CERT          = process.env.ADP_PEERING_SSL_CERT || 'api_probe_cert';
+
+const RL_PEERING_CONFIG_NAME        = process.env.RL_PEERING_CONFIG_NAME || 'rate-limit';
+const RL_PEERING_LOCAL_ADDRESS      = process.env.RL_PEERING_LOCAL_ADDRESS || 'eth0_ipv4_1';
+const RL_PEERING_LOCAL_PORT         = process.env.RL_PEERING_LOCAL_PORT || '15383';
+const RL_PEERING_MONITOR_PORT       = process.env.RL_PEERING_MONITOR_PORT || '25383';
+const RL_PEERING_ENABLE_SSL         = process.env.RL_PEERING_ENABLE_SSL ? process.env.RL_PEERING_ENABLE_SSL !== 'off' : GATEWAY_PEERING_ENABLE_SSL;
+const RL_PEERING_SSL_KEY            = process.env.RL_PEERING_SSL_KEY ||  'rate_limit_key';
+const RL_PEERING_SSL_CERT           = process.env.RL_PEERING_SSL_CERT || 'rate_limit_cert';
+
+const SUBS_PEERING_CONFIG_NAME      = process.env.SUBS_PEERING_CONFIG_NAME || 'subs';
+const SUBS_PEERING_LOCAL_ADDRESS    = process.env.SUBS_PEERING_LOCAL_ADDRESS || 'eth0_ipv4_1';
+const SUBS_PEERING_LOCAL_PORT       = process.env.SUBS_PEERING_LOCAL_PORT || '15384';
+const SUBS_PEERING_MONITOR_PORT     = process.env.SUBS_PEERING_MONITOR_PORT || '25384';
+const SUBS_PEERING_ENABLE_SSL       = process.env.SUBS_PEERING_ENABLE_SSL ? process.env.SUBS_PEERING_ENABLE_SSL !== 'off' : GATEWAY_PEERING_ENABLE_SSL;
+const SUBS_PEERING_SSL_KEY          = process.env.SUBS_PEERING_SSL_KEY || 'subs_key';
+const SUBS_PEERING_SSL_CERT         = process.env.SUBS_PEERING_SSL_CERT || 'subs_cert';
 
 const PEERING_LOG_LEVEL             = process.env.PEERING_LOG_LEVEL || 'internal';
 
@@ -111,7 +129,7 @@ gateway-peering ${cfg.name}
   local-port ${cfg.localPort}
   monitor-port ${cfg.monitorPort}
   priority ${cfg.priority}
-  ${cfg.peers.map(p => `peer ${p}`).join('\n')}
+  ${cfg.peers.map(p => `peer ${p}`).join('\n  ')}
   enable-ssl ${cfg.enableSSL ? `on
   ssl-key ${cfg.sslKey}
   ssl-cert ${cfg.sslCert}` : 'off'}
@@ -119,6 +137,16 @@ gateway-peering ${cfg.name}
   local-directory local:///tms` : 'memory'}
   enable-peer-group on
   log-level ${PEERING_LOG_LEVEL}
+exit
+%endif%`.replace(/\n\s*\n/g, '\n');
+
+const generateGatewayPeeringManagerConfig = () => `top; co
+%if% available "gateway-peering-manager"
+gateway-peering-manager
+  admin-state enabled
+  apic-gw-service ${GATEWAY_PEERING_CONFIG_NAME}
+  ${APICONNECT_DEDICATED_RL_PEERING   === 'on' ? `rate-limit ${RL_PEERING_CONFIG_NAME}` : ''}
+  ${APICONNECT_DEDICATED_SUBS_PEERING === 'on' ? `subscription ${SUBS_PEERING_CONFIG_NAME}` : ''}
 exit
 %endif%`.replace(/\n\s*\n/g, '\n');
 
@@ -150,7 +178,8 @@ exit
     let localip = await getLocalIp();
     let peers = (await getPeers()).filter(ip => ip !== localip);
 
-    let config = generateGatewayPeeringConfig({
+    let gpConfigs = [];
+    gpConfigs.push(generateGatewayPeeringConfig({
       name: GATEWAY_PEERING_CONFIG_NAME,
       localAddress: GATEWAY_PEERING_LOCAL_ADDRESS,
       localPort: GATEWAY_PEERING_LOCAL_PORT,
@@ -160,8 +189,41 @@ exit
       enableSSL: GATEWAY_PEERING_ENABLE_SSL,
       sslKey: GATEWAY_PEERING_SSL_KEY,
       sslCert: GATEWAY_PEERING_SSL_CERT
-    });
+    }));
 
+    if (APICONNECT_DEDICATED_RL_PEERING === 'on') {
+      gpConfigs.push(generateGatewayPeeringConfig({
+        name: RL_PEERING_CONFIG_NAME,
+        localAddress: RL_PEERING_LOCAL_ADDRESS,
+        localPort: RL_PEERING_LOCAL_PORT,
+        monitorPort: RL_PEERING_MONITOR_PORT,
+        priority: priority,
+        peers: peers,
+        enableSSL: RL_PEERING_ENABLE_SSL,
+        sslKey: RL_PEERING_SSL_KEY,
+        sslCert: RL_PEERING_SSL_CERT
+      }));
+    }
+
+    if (APICONNECT_DEDICATED_SUBS_PEERING === 'on') {
+      gpConfigs.push(generateGatewayPeeringConfig({
+        name: SUBS_PEERING_CONFIG_NAME,
+        localAddress: SUBS_PEERING_LOCAL_ADDRESS,
+        localPort: SUBS_PEERING_LOCAL_PORT,
+        monitorPort: SUBS_PEERING_MONITOR_PORT,
+        priority: priority,
+        peers: peers,
+        enableSSL: SUBS_PEERING_ENABLE_SSL,
+        sslKey: SUBS_PEERING_SSL_KEY,
+        sslCert: SUBS_PEERING_SSL_CERT
+      }));
+    }
+
+    if (APICONNECT_DEDICATED_RL_PEERING === 'on' || APICONNECT_DEDICATED_SUBS_PEERING === 'on') {
+      gpConfigs.push(generateGatewayPeeringManagerConfig());
+    }
+
+    let config = gpConfigs.join('\n\n');
     let gpConfigPath = `/drouter/config/${APICONNECT_DATAPOWER_DOMAIN}/gateway-peering.cfg`;
     await writeFile(gpConfigPath, config);
     log(`Generated ${gpConfigPath}:\n${config}`);
