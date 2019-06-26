@@ -74,4 +74,13 @@ spec:
           limits:
             cpu: "2"
             memory: "2Gi"
+{{- if .Values.datapower.adminUserSecret }}
+        volumeMounts:
+          - name: admin-user-password
+            mountPath: /usr/share/admin-password
+      volumes:
+        - name: admin-user-password
+          secret:
+            secretName: {{ .Values.datapower.adminUserSecret }}
+{{- end }}
 {{- end -}}
