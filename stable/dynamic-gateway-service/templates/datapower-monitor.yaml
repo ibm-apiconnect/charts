@@ -67,6 +67,8 @@ spec:
         env:
           - name: POD_LABEL_SELECTOR
             value: "app=={{ template "dynamic-gateway-service.name" . }},release=={{ .Release.Name }}"
+          - name: DP_XML_MGMT_PORT
+            value: {{ .Values.datapower.xmlManagementLocalPort | quote }}
         resources:
           requests:
             cpu: "1"
@@ -74,4 +76,13 @@ spec:
           limits:
             cpu: "2"
             memory: "2Gi"
+{{- if .Values.datapower.adminUserSecret }}
+        volumeMounts:
+          - name: admin-user-password
+            mountPath: /usr/share/admin-password
+      volumes:
+        - name: admin-user-password
+          secret:
+            secretName: {{ .Values.datapower.adminUserSecret }}
+{{- end }}
 {{- end -}}
