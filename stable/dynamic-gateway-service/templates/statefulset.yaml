@@ -96,6 +96,31 @@ spec:
                   release: {{ .Release.Name }}
 {{- end }}
       initContainers:
+        - name: dpm-check
+          image: "{{ .Values.datapower.busybox.repository }}:{{ .Values.datapower.busybox.tag }}"
+          imagePullPolicy: {{ .Values.datapower.busybox.pullPolicy }} 
+          env:
+            - name: DPM_FQDN
+              value: "{{ .Release.Name }}-dpm-svc.{{ .Release.Namespace }}.svc.cluster.local"
+            - name: DPM_LIVENESS_PORT
+              value: {{ .Values.datapowerMonitor.livenessPort | default 8080 | quote }}
+          command:
+            - sh
+            - -c
+            - |
+              export DPM_LIVENESS_URL="http://$DPM_FQDN:$DPM_LIVENESS_PORT/"
+              while [ true ] ; do
+                echo "Checking for DataPower Monitor Pod at $DPM_LIVENESS_URL"
+                wget --spider $DPM_LIVENESS_URL
+                if [ $? -ne 0 ] ; then
+                  echo "Could not reach DataPower Monitor Pod at $DPM_LIVENESS_URL"
+                  echo "Trying again in 5 seconds"
+                  sleep 5
+                else
+                  break
+                fi
+              done
+              echo "DataPower Monitor Pod reached at $DPM_LIVENESS_URL"
         - name: dpinit
           image: "{{ .Values.datapower.busybox.repository }}:{{ .Values.datapower.busybox.tag }}"
           imagePullPolicy: {{ .Values.datapower.busybox.pullPolicy }} 
