@@ -28,8 +28,8 @@ const APICONNECT_DATAPOWER_DOMAIN   = process.env.APICONNECT_DATAPOWER_DOMAIN ||
 const APICONNECT_V5_COMPAT_MODE     = process.env.APICONNECT_V5_COMPAT_MODE || 'on';
 const APICONNECT_ENABLE_TMS         = process.env.APICONNECT_ENABLE_TMS || 'off';
 const APICONNECT_API_DEBUG_PROBE    = process.env.APICONNECT_API_DEBUG_PROBE || 'off';
-const APICONNECT_DEDICATED_RL_PEERING   = process.env.APICONNECT_DEDICATED_RL_PEERING || 'off';
-const APICONNECT_DEDICATED_SUBS_PEERING = process.env.APICONNECT_DEDICATED_SUBS_PEERING || 'off';
+const APICONNECT_DEDICATED_RL_PEERING   = process.env.APICONNECT_DEDICATED_RL_PEERING || 'on';
+const APICONNECT_DEDICATED_SUBS_PEERING = process.env.APICONNECT_DEDICATED_SUBS_PEERING || 'on';
 
 const GATEWAY_PEERING_CONFIG_NAME   = process.env.GATEWAY_PEERING_CONFIG_NAME || 'gwd';
 const GATEWAY_PEERING_LOCAL_ADDRESS = process.env.GATEWAY_PEERING_LOCAL_ADDRESS || 'eth0_ipv4_1';
@@ -145,8 +145,8 @@ const generateGatewayPeeringManagerConfig = () => `top; co
 gateway-peering-manager
   admin-state enabled
   apic-gw-service ${GATEWAY_PEERING_CONFIG_NAME}
-  ${APICONNECT_DEDICATED_RL_PEERING   === 'on' ? `rate-limit ${RL_PEERING_CONFIG_NAME}` : ''}
-  ${APICONNECT_DEDICATED_SUBS_PEERING === 'on' ? `subscription ${SUBS_PEERING_CONFIG_NAME}` : ''}
+  ${APICONNECT_DEDICATED_RL_PEERING   !== 'off' ? `rate-limit ${RL_PEERING_CONFIG_NAME}` : ''}
+  ${APICONNECT_DEDICATED_SUBS_PEERING !== 'off' ? `subscription ${SUBS_PEERING_CONFIG_NAME}` : ''}
 exit
 %endif%`.replace(/\n\s*\n/g, '\n');
 
@@ -191,7 +191,7 @@ exit
       sslCert: GATEWAY_PEERING_SSL_CERT
     }));
 
-    if (APICONNECT_DEDICATED_RL_PEERING === 'on') {
+    if (APICONNECT_DEDICATED_RL_PEERING !== 'off') {
       gpConfigs.push(generateGatewayPeeringConfig({
         name: RL_PEERING_CONFIG_NAME,
         localAddress: RL_PEERING_LOCAL_ADDRESS,
@@ -205,7 +205,7 @@ exit
       }));
     }
 
-    if (APICONNECT_DEDICATED_SUBS_PEERING === 'on') {
+    if (APICONNECT_DEDICATED_SUBS_PEERING !== 'off') {
       gpConfigs.push(generateGatewayPeeringConfig({
         name: SUBS_PEERING_CONFIG_NAME,
         localAddress: SUBS_PEERING_LOCAL_ADDRESS,
@@ -219,7 +219,7 @@ exit
       }));
     }
 
-    if (APICONNECT_DEDICATED_RL_PEERING === 'on' || APICONNECT_DEDICATED_SUBS_PEERING === 'on') {
+    if (APICONNECT_DEDICATED_RL_PEERING !== 'off' || APICONNECT_DEDICATED_SUBS_PEERING !== 'off') {
       gpConfigs.push(generateGatewayPeeringManagerConfig());
     }
 

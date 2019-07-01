@@ -34,10 +34,10 @@ datapower:
     enableTMS: "off"
     # Dedicated rate-limit peering
     # Should be on or off
-    dedicatedRateLimitPeering: "off"
+    dedicatedRateLimitPeering: "on"
     # Dedicated subscriptions peering
     # Should be on or off
-    dedicatedSubscriptionsPeering: "off"
+    dedicatedSubscriptionsPeering: "on"
     # peeringLogLevel sets log level for gateway-peering operation. Should only be internal, warning, notice, verbose, or debug.
     peeringLogLevel: "internal"
     # Format type for logging. Can be json-icp, text, raw, csv, cbe, or xml

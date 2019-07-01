@@ -229,15 +229,15 @@ spec:
               value: "disabled"
 {{- end }}
             - name: APICONNECT_DEDICATED_RL_PEERING
-{{/* Enforce valid values for dedicatedRateLimitPeering as 'on' and 'off' (default: 'off') */}}
-{{- if eq (.Values.datapower.env.dedicatedRateLimitPeering | default "off") "on" }}
+{{/* Enforce valid values for dedicatedRateLimitPeering as 'on' and 'off' (default: 'on') */}}
+{{- if ne (.Values.datapower.env.dedicatedRateLimitPeering | default "on") "off" }}
               value: "on"
 {{- else }}
               value: "off"
 {{- end }}
             - name: APICONNECT_DEDICATED_SUBS_PEERING
-{{/* Enforce valid values for dedicatedSubscriptionsPeering as 'on' and 'off' (default: 'off') */}}
-{{- if eq (.Values.datapower.env.dedicatedSubscriptionsPeering | default "off") "on" }}
+{{/* Enforce valid values for dedicatedSubscriptionsPeering as 'on' and 'off' (default: 'on') */}}
+{{- if ne (.Values.datapower.env.dedicatedSubscriptionsPeering | default "on") "off" }}
               value: "on"
 {{- else }}
               value: "off"

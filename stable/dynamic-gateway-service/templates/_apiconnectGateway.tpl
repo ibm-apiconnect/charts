@@ -318,7 +318,7 @@ apiconnect.cfg: |
     exit
     exit
 
-{{- if eq (.Values.datapower.env.dedicatedRateLimitPeering | default "off") "on" }}
+{{- if ne (.Values.datapower.env.dedicatedRateLimitPeering | default "on") "off" }}
     crypto
       key rate_limit_key cert:///gwd/peering_key.pem
     exit
@@ -328,7 +328,7 @@ apiconnect.cfg: |
     exit
 {{- end }}
 
-{{- if eq (.Values.datapower.env.dedicatedSubscriptionsPeering | default "off") "on" }}
+{{- if ne (.Values.datapower.env.dedicatedSubscriptionsPeering | default "on") "off" }}
     crypto
       key subs_key cert:///gwd/peering_key.pem
     exit
