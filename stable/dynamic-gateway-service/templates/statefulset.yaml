@@ -195,19 +195,18 @@ spec:
               /root/node /start/gateway-peering.js
               exec /start.sh --log-format {{ .Values.datapower.env.defaultLogFormat }}
 {{- else }}
-{{- if eq (include "datapower-requirements.validLicenseVersion" .) "false" }}
-              echo "ERROR: USER MUST SPECIFY A LICENSE VERSION"
-              echo "Please set datapower.licenseVersion"
-{{- end }}
-{{- if eq (include "datapower-requirements.dpmImageSet" .) "false" }}
-              echo "ERROR: USER MUST SPECIFY A DATAPOWER MONITOR IMAGE"
-              echo "Please set datapowerMonitor.image.repository and datapowerMonitor.image.tag"
-{{- end }}
+              sh /start/dp-requirement-error.sh
               exit 1
 {{- end }}
           stdin: true
           tty: true
           env:
+{{- if eq (include "datapower-requirements.satisfied" .) "false"}}
+            - name: DP_REQ_VALID_LICENSE_VERSION
+              value: "{{ template "datapower-requirements.validLicenseVersion" . }}"
+            - name: DP_REQ_VALID_DPM_IMAGE_SET
+              value: "{{ template "datapower-requirements.dpmImageSet" . }}"
+{{- end }}
             - name: APICONNECT_K8S_NAMESPACE
               value: {{ .Release.Namespace }}
             - name: APICONNECT_K8S_PEERS_SVC_NAME
@@ -387,7 +386,7 @@ spec:
 {{- end }}
         - name: start-volume
           configMap:
-            name: {{ template "dynamic-gateway-service.fullname" . }}-static-gateway-peering
+            name: {{ template "dynamic-gateway-service.fullname" . }}-static-start-scripts
         - name: drouter-config-volume
           emptyDir: {}
         - name: root-secure-usrcerts-apiconnect-volume
