@@ -95,6 +95,8 @@ spec:
                   app: {{ template "dynamic-gateway-service.name" . }}
                   release: {{ .Release.Name }}
 {{- end }}
+{{/* Define the initContainer only if the requirements are satisfied */}}
+{{- if eq (include "datapower-requirements.satisfied" .) "true"}}
       initContainers:
         - name: dpinit
           image: "{{ .Values.datapower.busybox.repository }}:{{ .Values.datapower.busybox.tag }}"
@@ -108,7 +110,6 @@ spec:
             - sh
             - -c
             - |
-{{- if and .Values.datapowerMonitor.image.repository .Values.datapowerMonitor.image.tag }}
               sh /init/scripts/init-dpm-check.sh
               cp -RL /init/config/* /drouter/config
 {{- if .Values.datapower.adminUserSecret }}
@@ -128,11 +129,6 @@ spec:
               find /drouter/ramdisk2/mnt -type d -exec chown 101:101 {} \;
 {{- end }}
               find /drouter/ramdisk2/mnt -type d -exec chmod 0777 {} \;
-{{- end }}
-{{- else }}
-              echo "ERROR: USER MUST SPECIFY A DATAPOWER MONITOR IMAGE"
-              echo "Please set datapowerMonitor.image.repository and datapowerMonitor.image.tag"
-              exit 1
 {{- end }}
           volumeMounts:
             - name: init-config-volume
@@ -158,6 +154,9 @@ spec:
 {{- if .Values.datapower.customDatapowerConfig }}
             - name: init-custom-config-volume
               mountPath: /init/custom-config
+{{- end }}
+{{- else }}
+{{/* No initContainer if requirements are not satisfied */}}
 {{- end }}
       containers:
         - name: {{ .Chart.Name }}
@@ -190,23 +189,21 @@ spec:
             - sh
             - -c
             - |
-{{- with .Values.datapower }}
-{{- if .licenseVersion }}
-{{- if or (eq .licenseVersion "Production") (eq .licenseVersion "Nonproduction") (eq .licenseVersion "Developers") }}
+{{- if eq (include "datapower-requirements.satisfied" .) "true"}}
               set -x
               export $(env | grep ^DATAPOWER_ | cut -d= -f1)
               /root/node /start/gateway-peering.js
-              exec /start.sh --log-format {{ .env.defaultLogFormat }}
+              exec /start.sh --log-format {{ .Values.datapower.env.defaultLogFormat }}
 {{- else }}
+{{- if eq (include "datapower-requirements.validLicenseVersion" .) "false" }}
               echo "ERROR: USER MUST SPECIFY A LICENSE VERSION"
               echo "Please set datapower.licenseVersion"
-              exit 1
 {{- end }}
-{{- else }}
-              echo "ERROR: USER MUST SPECIFY A LICENSE VERSION"
-              echo "Please set datapower.licenseVersion"
-              exit 1
+{{- if eq (include "datapower-requirements.dpmImageSet" .) "false" }}
+              echo "ERROR: USER MUST SPECIFY A DATAPOWER MONITOR IMAGE"
+              echo "Please set datapowerMonitor.image.repository and datapowerMonitor.image.tag"
 {{- end }}
+              exit 1
 {{- end }}
           stdin: true
           tty: true

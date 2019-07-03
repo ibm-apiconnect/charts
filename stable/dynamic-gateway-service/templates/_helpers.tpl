@@ -30,3 +30,39 @@ Create chart name and version as used by the chart label.
 {{- define "dynamic-gateway-service.chart" -}}
 {{- printf "%s-%s" .Chart.Name .Chart.Version | replace "+" "_" | trunc 63 | trimSuffix "-" -}}
 {{- end -}}
+
+
+{{/*
+Determine whether a valid DataPower license version is set
+*/}}
+{{- define "datapower-requirements.validLicenseVersion" -}}
+{{- with .Values.datapower -}}
+{{- if and .licenseVersion (or (eq .licenseVersion "Production") (eq .licenseVersion "Nonproduction") (eq .licenseVersion "Developers")) -}}
+true
+{{- else -}}
+false
+{{- end -}}
+{{- end -}}
+{{- end -}}
+
+{{/*
+Determine whether the DataPower Monitor image has been set
+*/}}
+{{- define "datapower-requirements.dpmImageSet" -}}
+{{- if and .Values.datapowerMonitor.image.repository .Values.datapowerMonitor.image.tag -}}
+true
+{{- else -}}
+false
+{{- end -}}
+{{- end -}}
+
+{{/*
+Determine whether conditions for DataPower pods have been satisfied
+*/}}
+{{- define "datapower-requirements.satisfied" -}}
+{{- if and (eq (include "datapower-requirements.validLicenseVersion" .) "true") (eq (include "datapower-requirements.dpmImageSet" .) "true") -}}
+true
+{{- else -}}
+false
+{{- end -}}
+{{- end -}}
