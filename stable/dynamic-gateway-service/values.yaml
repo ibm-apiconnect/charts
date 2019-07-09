@@ -135,6 +135,7 @@ service:
 # DataPower Monitor Section
 #
 datapowerMonitor:
+  livenessPort: 8080
   image:
     repository:
     tag:

@@ -1,4 +1,3 @@
-{{- if and .Values.datapowerMonitor.image.repository .Values.datapowerMonitor.image.tag -}}
 ---
 apiVersion: v1
 kind: ServiceAccount
@@ -35,6 +34,22 @@ subjects:
   name: {{ .Release.Name }}-dpm-sa
   namespace: {{ .Release.Namespace }}
 ---
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ .Release.Name }}-dpm-svc
+  label:
+    app: datapower-monitor
+spec:
+  ports:
+  - port: {{ .Values.datapowerMonitor.livenessPort | default 8080 }}
+    targetPort: {{ .Values.datapowerMonitor.livenessPort | default 8080 }}
+    protocol: TCP
+    name: dpm-liveness
+  selector:
+    app: datapower-monitor
+    release: {{ .Release.Name }}
+---
 apiVersion: apps/v1
 kind: Deployment
 metadata:
@@ -69,6 +84,22 @@ spec:
             value: "app=={{ template "dynamic-gateway-service.name" . }},release=={{ .Release.Name }}"
           - name: DP_XML_MGMT_PORT
             value: {{ .Values.datapower.xmlManagementLocalPort | quote }}
+          - name: LIVENESS_CHECK_SERVER_ENABLED
+            value: "true"
+          - name: LIVENESS_CHECK_SERVER_PORT
+            value: {{ .Values.datapowerMonitor.livenessPort | default 8080 | quote }}
+        ports:
+          - containerPort: {{ .Values.datapowerMonitor.livenessPort | default 8080 }}
+            name: dpm-liveness
+        livenessProbe:
+          httpGet:
+            scheme: HTTP
+            path: /
+            port: dpm-liveness
+          initialDelaySeconds: 10
+          timeoutSeconds: 5
+          periodSeconds: 10
+          failureThreshold: 3
         resources:
           requests:
             cpu: "1"
@@ -85,4 +116,3 @@ spec:
           secret:
             secretName: {{ .Values.datapower.adminUserSecret }}
 {{- end }}
-{{- end -}}
