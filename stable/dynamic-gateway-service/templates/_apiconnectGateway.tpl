@@ -318,6 +318,27 @@ apiconnect.cfg: |
     exit
     exit
 
+{{- if eq (.Values.datapower.env.dedicatedRateLimitPeering | default "off") "on" }}
+    crypto
+      key rate_limit_key cert:///gwd/peering_key.pem
+    exit
+
+    crypto
+      certificate rate_limit_cert cert:///gwd/peering_cert.pem
+    exit
+{{- end }}
+
+{{- if eq (.Values.datapower.env.dedicatedSubscriptionsPeering | default "off") "on" }}
+    crypto
+      key subs_key cert:///gwd/peering_key.pem
+    exit
+
+    crypto
+      certificate subs_cert cert:///gwd/peering_cert.pem
+    exit
+{{- end }}
+
+
     %if% available "include-config"
 
     include-config "gateway-peering-apic"

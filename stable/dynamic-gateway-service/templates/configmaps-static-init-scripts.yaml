@@ -1,0 +1,9 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: {{ template "dynamic-gateway-service.fullname" . }}-static-init-scripts
+data:
+  init-admin-user.sh: |
+{{ .Files.Get "static/init-admin-user.sh" | indent 4 }}
+  init-dpm-check.sh: |
+{{ .Files.Get "static/init-dpm-check.sh" | indent 4 -}}

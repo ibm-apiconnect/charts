@@ -1,7 +1,0 @@
-apiVersion: v1
-kind: ConfigMap
-metadata:
-  name: {{ template "dynamic-gateway-service.fullname" . }}-static-init-admin-user
-data:
-  init-admin-user.sh: |
-{{ .Files.Get "static/init-admin-user.sh" | indent 4 -}}
