@@ -36,12 +36,11 @@ Create chart name and version as used by the chart label.
 Determine whether a valid DataPower license version is set
 */}}
 {{- define "datapower-requirements.validLicenseVersion" -}}
-{{- with .Values.datapower -}}
-{{- if and .licenseVersion (or (eq (.licenseVersion | quote) "Production") (eq (.licenseVersion | quote) "Nonproduction") (eq (.licenseVersion | quote) "Developers")) -}}
+{{ $licenseVersion := quote .Values.datapower.licenseVersion }}
+{{- if and .Values.datapower.licenseVersion (or (eq $licenseVersion ("Production" | quote)) (eq $licenseVersion ("Nonproduction" | quote)) (eq $licenseVersion ("Developers" | quote))) -}}
 true
 {{- else -}}
 false
-{{- end -}}
 {{- end -}}
 {{- end -}}
 
