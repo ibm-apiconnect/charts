@@ -30,12 +30,12 @@ spec:
 {{- if .Values.cip }}
   {{- with .Values.datapower }}
     {{- if .licenseVersion }}
-      {{- if or (eq .licenseVersion "Production") (eq .licenseVersion "Nonproduction") (eq .licenseVersion "Developers") }}
+      {{- if or (eq (.licenseVersion | quote) "Production") (eq (.licenseVersion | quote) "Nonproduction") (eq (.licenseVersion | quote) "Developers") }}
         productVersion: "{{ .image.tag }}"
-        {{- if eq .licenseVersion "Production" }}
+        {{- if eq (.licenseVersion | quote) "Production" }}
         productID: 'DPGateway_5737_I89_ICIP_chargeable'
         productName: 'IBM Cloud Integration Platform - DataPower Gateway (Chargeable)'
-        {{- else if eq .licenseVersion "Nonproduction" }}
+        {{- else if eq (.licenseVersion | quote) "Nonproduction" }}
         productID: 'DPGateway_5737_I89_ICIP_nonProd_chargeable'
         productName: 'IBM Cloud Integration Platform (non-production) - DataPower Gateway (Chargeable)'
         {{- else }}
@@ -47,14 +47,14 @@ spec:
 {{- else }}
   {{- with .Values.datapower }}
     {{- if .licenseVersion }}
-      {{- if or (eq .licenseVersion "Production") (eq .licenseVersion "Nonproduction") (eq .licenseVersion "Developers") }}
+      {{- if or (eq (.licenseVersion | quote) "Production") (eq (.licenseVersion | quote) "Nonproduction") (eq (.licenseVersion | quote) "Developers") }}
         productFlexpointBundle: "{{ .flexpointBundle }}"
         productMetric: "PROCESSOR_VALUE_UNIT"
         productVersion: "{{ .image.tag }}"
-        {{- if eq .licenseVersion "Production" }}
+        {{- if eq (.licenseVersion | quote) "Production" }}
         productID: '887a7b80dd7b40c9b978ff085230604e'
         productChargedContainers: "all"
-        {{- else if eq .licenseVersion "Nonproduction" }}
+        {{- else if eq (.licenseVersion | quote) "Nonproduction" }}
         productID: 'bd624448e8484592879f2e1a950686bd'
         productChargedContainers: "all"
         {{- else }}

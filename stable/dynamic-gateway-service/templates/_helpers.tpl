@@ -37,7 +37,7 @@ Determine whether a valid DataPower license version is set
 */}}
 {{- define "datapower-requirements.validLicenseVersion" -}}
 {{- with .Values.datapower -}}
-{{- if and .licenseVersion (or (eq .licenseVersion "Production") (eq .licenseVersion "Nonproduction") (eq .licenseVersion "Developers")) -}}
+{{- if and .licenseVersion (or (eq (.licenseVersion | quote) "Production") (eq (.licenseVersion | quote) "Nonproduction") (eq (.licenseVersion | quote) "Developers")) -}}
 true
 {{- else -}}
 false
