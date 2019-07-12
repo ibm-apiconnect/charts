@@ -1,1 +1,11 @@
-
+{{- if eq (include "datapower-requirements.satisfied" .) "true" -}}
+Deployment has met all requirements.!
+{{- else }}
+Deployment is missing some requirements:
+{{- if eq (include "datapower-requirements.validLicenseVersion" .) "false" }}
+  - A valid licenseVersion is missing. Please enter Developers, Production, or Nonproduction.
+{{- end }}
+{{- if eq (include "datapower-requirements.dpmImageSet" .) "false" }}
+  - A datapower-monitor image/tag is missing. Please add a valid datapower-monitor image/tag.
+{{- end -}}
+{{- end -}}
