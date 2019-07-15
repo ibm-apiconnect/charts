@@ -56,10 +56,22 @@ false
 {{- end -}}
 
 {{/*
+Determine whether the high-performance peering option has been set to "on" or "off"
+*/}}
+{{- define "datapower-requirements.hpPeeringOptionSet" -}}
+{{- $hpPeeringOption := quote .Values.datapower.env.highPerformancePeering -}}
+{{- if or (eq $hpPeeringOption ("on" | quote)) (eq $hpPeeringOption ("off" | quote)) -}}
+true
+{{- else -}}
+false
+{{- end -}}
+{{- end -}}
+
+{{/*
 Determine whether conditions for DataPower pods have been satisfied
 */}}
 {{- define "datapower-requirements.satisfied" -}}
-{{- if and (eq (include "datapower-requirements.validLicenseVersion" .) "true") (eq (include "datapower-requirements.dpmImageSet" .) "true") -}}
+{{- if and (eq (include "datapower-requirements.validLicenseVersion" .) "true") (eq (include "datapower-requirements.hpPeeringOptionSet" .) "true") (eq (include "datapower-requirements.dpmImageSet" .) "true") -}}
 true
 {{- else -}}
 false

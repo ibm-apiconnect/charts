@@ -199,6 +199,8 @@ spec:
               value: "{{ template "datapower-requirements.validLicenseVersion" . }}"
             - name: DP_REQ_VALID_DPM_IMAGE_SET
               value: "{{ template "datapower-requirements.dpmImageSet" . }}"
+            - name: DP_REQ_HP_PEERING_OPTION_SET
+              value: "{{ template "datapower-requirements.hpPeeringOptionSet" . }}"
 {{- end }}
             - name: APICONNECT_K8S_NAMESPACE
               value: {{ .Release.Namespace }}
@@ -230,15 +232,13 @@ spec:
               value: "disabled"
 {{- end }}
             - name: APICONNECT_DEDICATED_RL_PEERING
-{{/* Enforce valid values for dedicatedRateLimitPeering as 'on' and 'off' (default: 'off') */}}
-{{- if eq (.Values.datapower.env.dedicatedRateLimitPeering | default "off") "on" }}
+{{- if eq (.Values.datapower.env.highPerformancePeering | default "off") "on" }}
               value: "on"
 {{- else }}
               value: "off"
 {{- end }}
             - name: APICONNECT_DEDICATED_SUBS_PEERING
-{{/* Enforce valid values for dedicatedSubscriptionsPeering as 'on' and 'off' (default: 'off') */}}
-{{- if eq (.Values.datapower.env.dedicatedSubscriptionsPeering | default "off") "on" }}
+{{- if eq (.Values.datapower.env.highPerformancePeering | default "off") "on" }}
               value: "on"
 {{- else }}
               value: "off"
