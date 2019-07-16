@@ -59,8 +59,9 @@ false
 Determine whether the high-performance peering option has been set to "on" or "off"
 */}}
 {{- define "datapower-requirements.hpPeeringOptionSet" -}}
+{{- $v5cMode := quote .Values.datapower.apicGatewayServiceV5CompatibilityMode -}}
 {{- $hpPeeringOption := quote .Values.datapower.env.highPerformancePeering -}}
-{{- if or (eq $hpPeeringOption ("on" | quote)) (eq $hpPeeringOption ("off" | quote)) -}}
+{{- if or (ne $v5cMode ("off" | quote)) (eq $hpPeeringOption ("on" | quote)) (eq $hpPeeringOption ("off" | quote)) -}}
 true
 {{- else -}}
 false

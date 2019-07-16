@@ -318,7 +318,7 @@ apiconnect.cfg: |
     exit
     exit
 
-{{- if eq (.Values.datapower.env.highPerformancePeering | default "") "on" }}
+{{- if and (eq (.Values.datapower.apicGatewayServiceV5CompatibilityMode | default "on") "off") (eq (.Values.datapower.env.highPerformancePeering | default "") "on") }}
     crypto
       key rate_limit_key cert:///gwd/peering_key.pem
     exit

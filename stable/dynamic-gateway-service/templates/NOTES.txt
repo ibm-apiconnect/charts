@@ -1,6 +1,6 @@
 {{- if eq (include "datapower-requirements.satisfied" .) "true" -}}
 Deployment has met all requirements!
-{{ if eq (.Values.datapower.env.highPerformancePeering | default "") "on" }}
+{{- if and (eq (.Values.datapower.apicGatewayServiceV5CompatibilityMode | default "on") "off") (eq (.Values.datapower.env.highPerformancePeering | default "") "on") }}
 NOTE: High-performance peering is enabled.
       If upgrading an existing deployment which did not previously have high-performance peering enabled, this may
       cause problems with rate-limits and subscriptions which may persist after the changes have been rolled-out.

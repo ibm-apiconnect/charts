@@ -231,16 +231,15 @@ spec:
 {{- else }}
               value: "disabled"
 {{- end }}
+{{- if and (eq (.Values.datapower.apicGatewayServiceV5CompatibilityMode | default "on") "off") (eq (.Values.datapower.env.highPerformancePeering | default "") "on") }}
             - name: APICONNECT_DEDICATED_RL_PEERING
-{{- if eq (.Values.datapower.env.highPerformancePeering | default "off") "on" }}
               value: "on"
-{{- else }}
-              value: "off"
-{{- end }}
             - name: APICONNECT_DEDICATED_SUBS_PEERING
-{{- if eq (.Values.datapower.env.highPerformancePeering | default "off") "on" }}
               value: "on"
 {{- else }}
+            - name: APICONNECT_DEDICATED_RL_PEERING
+              value: "off"
+            - name: APICONNECT_DEDICATED_SUBS_PEERING
               value: "off"
 {{- end }}
             - name: GATEWAY_PEERING_MONITOR_PORT
