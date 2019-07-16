@@ -38,7 +38,7 @@ apiVersion: v1
 kind: Service
 metadata:
   name: {{ .Release.Name }}-dpm-svc
-  label:
+  labels:
     app: datapower-monitor
 spec:
   ports:
