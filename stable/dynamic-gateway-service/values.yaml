@@ -45,6 +45,14 @@ datapower:
     defaultLogFormat: "text"
     # Log level for DataPower. Should be 0-7
     datapowerLogLevel: "3"
+    # Set to "true" if the log policy shold be disabled
+    policyDisableLog: "false"
+    # Set to "true" if the xslt policy shold be disabled
+    policyDisableXSLT: "false"
+    # Set to "true" if the gatewayscript policy shold be disabled
+    policyDisableGatewayScript: "false"
+    # Set to "true" if the ratelimit policy shold be disabled
+    policyDisableRateLimit: "false"
   # In order to replace the default admin credentials, the new credentials should be configured via Secret and `.Values.datapower.adminUserSecret` must be set to the name of
   # the Secret containing the admin user's credentials
   #
