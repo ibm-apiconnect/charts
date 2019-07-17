@@ -290,25 +290,25 @@ spec:
             - name: "PEERING_LOG_LEVEL"
               value: {{ .Values.datapower.env.peeringLogLevel }}
             - name: "GWD_POLICY_DISABLE_LOG"
-{{- if eq .Values.datapower.policyDisableLog "true" }}
+{{- if eq .Values.datapower.env.policyDisableLog "true" }}
               value: "true"
 {{- else }}
               value: "false"
 {{- end }}
             - name: "GWD_POLICY_DISABLE_XSLT"
-{{- if eq .Values.datapower.policyDisableXSLT "true" }}
+{{- if eq .Values.datapower.env.policyDisableXSLT "true" }}
               value: "true"
 {{- else }}
               value: "false"
 {{- end }}
             - name: "GWD_POLICY_DISABLE_GATEWAYSCRIPT"
-{{- if eq .Values.datapower.policyDisableGatewayScript "true" }}
+{{- if eq .Values.datapower.env.policyDisableGatewayScript "true" }}
               value: "true"
 {{- else }}
               value: "false"
 {{- end }}
             - name: "GWD_POLICY_DISABLE_RATELIMIT"
-{{- if eq .Values.datapower.policyDisableRateLimit "true" }}
+{{- if eq .Values.datapower.env.policyDisableRateLimit "true" }}
               value: "true"
 {{- else }}
               value: "false"
