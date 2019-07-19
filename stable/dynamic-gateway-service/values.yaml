@@ -32,12 +32,11 @@ datapower:
     tmsPeeringEnableSSL: "on"
     # Should be on or off
     enableTMS: "off"
-    # Dedicated rate-limit peering
-    # Should be on or off
-    dedicatedRateLimitPeering: "off"
-    # Dedicated subscriptions peering
-    # Should be on or off
-    dedicatedSubscriptionsPeering: "off"
+
+    # High-performance Peering
+    # Should be on or off. No default should be set, users MUST declare one way or another
+    highPerformancePeering:
+
     # peeringLogLevel sets log level for gateway-peering operation. Should only be internal, warning, notice, verbose, or debug.
     peeringLogLevel: "internal"
     # Format type for logging. Can be json-icp, text, raw, csv, cbe, or xml
