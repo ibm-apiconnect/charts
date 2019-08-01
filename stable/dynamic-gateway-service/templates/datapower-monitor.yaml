@@ -88,6 +88,10 @@ spec:
             value: "true"
           - name: LIVENESS_CHECK_SERVER_PORT
             value: {{ .Values.datapowerMonitor.livenessPort | default 8080 | quote }}
+          - name: POD_LIFECYCLE_EVENT_DEBOUNCE_MS
+            value: {{ .Values.datapowerMonitor.env.lifecycleDebounceMs | default 10000 | quote }}
+          - name: PEERING_RECOVERY_CHECK_INTERVAL_MS
+            value: {{ .Values.datapowerMonitor.env.peeringRecoveryCheckIntervalMs | default 1000 | quote }}
         ports:
           - containerPort: {{ .Values.datapowerMonitor.livenessPort | default 8080 }}
             name: dpm-liveness
