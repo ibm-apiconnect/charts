@@ -143,9 +143,13 @@ service:
 #
 datapowerMonitor:
   livenessPort: 8080
+  env:
+    lifecycleDebounceMs: 10000
+    peeringRecoveryCheckIntervalMs: 1000
   image:
     repository:
     tag:
+  
 
 
 #-----------------------------------------------------------------------------
