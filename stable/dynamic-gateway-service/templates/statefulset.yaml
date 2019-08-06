@@ -88,69 +88,6 @@ spec:
                   app: {{ template "dynamic-gateway-service.name" . }}
                   release: {{ .Release.Name }}
 {{- end }}
-{{/* Define the initContainer only if the requirements are satisfied */}}
-{{- if eq (include "datapower-requirements.satisfied" .) "true"}}
-      initContainers:
-        - name: dpinit
-          image: "{{ .Values.datapower.busybox.repository }}:{{ .Values.datapower.busybox.tag }}"
-          imagePullPolicy: {{ .Values.datapower.busybox.pullPolicy }} 
-          env:
-            - name: DPM_FQDN
-              value: "{{ .Release.Name }}-dpm-svc.{{ .Release.Namespace }}.svc.cluster.local"
-            - name: DPM_LIVENESS_PORT
-              value: {{ .Values.datapowerMonitor.livenessPort | default 8080 | quote }}
-          command:
-            - sh
-            - -c
-            - |
-              sh /init/scripts/init-dpm-check.sh
-              cp -RL /init/config/* /drouter/config
-{{- if .Values.datapower.adminUserSecret }}
-              sh /init/scripts/init-admin-user.sh
-{{- end }}
-{{- if .Values.datapower.customDatapowerConfig }}
-              cat /init/custom-config/*.cfg > /drouter/config/apiconnect/custom-config.cfg
-{{- end }}
-{{/* If SSH is enabled, DP runs as root. Only chown if SSH is not enabled */}}
-{{- if ne .Values.datapower.gatewaySshState "enabled" }}
-              chown -R 101:101 /drouter/config /root/secure/usrcerts/apiconnect
-{{- end }}
-              chmod -R 0777 /drouter/config /root/secure/usrcerts/apiconnect
-{{- if eq (.Values.datapower.env.enableTMS | default "off") "on" }}
-{{/* If SSH is enabled, DP runs as root. Only chown if SSH is not enabled */}}
-{{- if ne .Values.datapower.gatewaySshState "enabled" }}
-              find /drouter/ramdisk2/mnt -type d -exec chown 101:101 {} \;
-{{- end }}
-              find /drouter/ramdisk2/mnt -type d -exec chmod 0777 {} \;
-{{- end }}
-          volumeMounts:
-            - name: init-config-volume
-              mountPath: /init/config
-            - name: init-config-apiconnect-volume
-              mountPath: /init/config/apiconnect
-            - name: init-scripts-volume
-              mountPath: /init/scripts
-            - name: drouter-config-volume
-              mountPath: /drouter/config
-            - name: root-secure-usrcerts-apiconnect-volume
-              mountPath: /root/secure/usrcerts/apiconnect
-            - name: drouter-ramdisk2-volume
-              mountPath: /drouter/ramdisk2
-{{- if eq (.Values.datapower.env.enableTMS | default "off") "on" }}
-            - name: tms
-              mountPath: /drouter/ramdisk2/mnt/raid-volume/raid0/local
-{{- end }}
-{{- if .Values.datapower.adminUserSecret }}
-            - name: init-admin-user-secret
-              mountPath: /init/admin-user-secret
-{{- end }}
-{{- if .Values.datapower.customDatapowerConfig }}
-            - name: init-custom-config-volume
-              mountPath: /init/custom-config
-{{- end }}
-{{- else }}
-{{/* No initContainer if requirements are not satisfied */}}
-{{- end }}
       containers:
         - name: {{ .Chart.Name }}
           image: "{{ .Values.datapower.image.repository }}:{{ .Values.datapower.image.tag }}"
@@ -182,6 +119,26 @@ spec:
             - sh
             - -c
             - |
+              sh /opt/ibm/datapower/init/scripts/init-dpm-check.sh
+              cp -RL /opt/ibm/datapower/init/config/* /drouter/config
+{{- if .Values.datapower.adminUserSecret }}
+              sh /opt/ibm/datapower/init/scripts/init-admin-user.sh
+{{- end }}
+{{- if .Values.datapower.customDatapowerConfig }}
+              cat /opt/ibm/datapower/init/custom-config/*.cfg > /drouter/config/apiconnect/custom-config.cfg
+{{- end }}
+{{/* If SSH is enabled, DP runs as root. Only chown if SSH is not enabled */}}
+{{- if ne .Values.datapower.gatewaySshState "enabled" }}
+              chown -R 101:101 /drouter/config /root/secure/usrcerts/apiconnect
+{{- end }}
+              chmod -R 0777 /drouter/config /root/secure/usrcerts/apiconnect
+{{- if eq (.Values.datapower.env.enableTMS | default "off") "on" }}
+{{/* If SSH is enabled, DP runs as root. Only chown if SSH is not enabled */}}
+{{- if ne .Values.datapower.gatewaySshState "enabled" }}
+              find /drouter/ramdisk2/mnt -type d -exec chown 101:101 {} \;
+{{- end }}
+              find /drouter/ramdisk2/mnt -type d -exec chmod 0777 {} \;
+{{- end }}
 {{- if eq (include "datapower-requirements.satisfied" .) "true"}}
               set -x
               export $(env | grep ^DATAPOWER_ | cut -d= -f1)
@@ -194,6 +151,10 @@ spec:
           stdin: true
           tty: true
           env:
+            - name: DPM_FQDN
+              value: "{{ .Release.Name }}-dpm-svc.{{ .Release.Namespace }}.svc.cluster.local"
+            - name: DPM_LIVENESS_PORT
+              value: {{ .Values.datapowerMonitor.livenessPort | default 8080 | quote }}
 {{- if eq (include "datapower-requirements.satisfied" .) "false"}}
             - name: DP_REQ_VALID_LICENSE_VERSION
               value: "{{ template "datapower-requirements.validLicenseVersion" . }}"
@@ -364,6 +325,20 @@ spec:
             periodSeconds: 10
             failureThreshold: 3
           volumeMounts:
+            - name: init-config-volume
+              mountPath: /opt/ibm/datapower/init/config
+            - name: init-config-apiconnect-volume
+              mountPath: /opt/ibm/datapower/init/config/apiconnect
+            - name: init-scripts-volume
+              mountPath: /opt/ibm/datapower/init/scripts
+{{- if .Values.datapower.adminUserSecret }}
+            - name: init-admin-user-secret
+              mountPath: /opt/ibm/datapower/init/admin-user-secret
+{{- end }}
+{{- if .Values.datapower.customDatapowerConfig }}
+            - name: init-custom-config-volume
+              mountPath: /opt/ibm/datapower/init/custom-config
+{{- end }}
             - name: start-volume
               mountPath: /start
             - name: drouter-config-volume
