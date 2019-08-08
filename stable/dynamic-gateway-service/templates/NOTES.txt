@@ -4,7 +4,8 @@ Deployment has met all requirements!
 NOTE: High-performance peering is enabled.
       If upgrading an existing deployment which did not previously have high-performance peering enabled, this may
       cause problems with rate-limits and subscriptions which may persist after the changes have been rolled-out.
-      Please see the IBM Knowledge Center for more details.
+      Please see the IBM Knowledge Center for more details:
+      https://www.ibm.com/support/knowledgecenter/SSMNED_2018/com.ibm.apic.install.doc/tapic_install_Kubernetes_gwy_peering.html
 {{- end -}}
 {{- else }}
 Deployment is missing some requirements:
@@ -13,8 +14,14 @@ Deployment is missing some requirements:
 {{- end }}
 {{- if eq (include "datapower-requirements.dpmImageSet" .) "false" }}
   - A datapower-monitor image/tag is missing. Please add a valid datapower-monitor image/tag.
+    Please see the following IBM Knowledge Center articles for more information
+    https://www.ibm.com/support/knowledgecenter/SSMNED_2018/com.ibm.apic.install.doc/tapic_upgrade_Kubernetes_gateway_monitor.html
+    https://www.ibm.com/support/knowledgecenter/SSMNED_2018/com.ibm.apic.install.doc/tapic_install_Kubernetes_gwy.html
 {{- end -}}
 {{- if eq (include "datapower-requirements.hpPeeringOptionSet" .) "false" }}
   - The high-performance peering option has not been set correctly. It must be either "on" or "off"
+    Please see the following IBM Knowledge Center articles for more information
+    https://www.ibm.com/support/knowledgecenter/SSMNED_2018/com.ibm.apic.install.doc/tapic_install_Kubernetes_gwy_peering.html
+    https://www.ibm.com/support/knowledgecenter/SSMNED_2018/com.ibm.apic.install.doc/tapic_install_Kubernetes_gwy.html
 {{- end -}}
 {{- end -}}
