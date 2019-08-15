@@ -1,0 +1,51 @@
+{{- if .Values.odTracing.enabled }}
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: icp4i-od-registration-job
+spec:
+  template:
+    spec:
+      {{- if .Values.odTracing.pullSecret }}
+      imagePullSecrets:
+        - name: {{ .Values.odTracing.pullSecret }}
+      {{- end }}
+      containers:
+        - name: icp4i-od-registration-container
+          image: {{ .Values.odTracing.imageAgent }}
+          imagePullPolicy: IfNotPresent
+          # --max-retries <number of registration retries>
+          # --retry-interval <interval in seconds between retries>
+          # --connect-timeout <time in seconds for connect timeoute>
+          # --max-time 10 <time in seconds for response timeoute>
+          command: [ "sh", "-c"]
+          args:
+            - /usr/local/bin/od4ici_registration.sh --max-retries 999999 --retry-interval 10 --connect-timeout 3 --max-time 5
+          env:
+            - name: NODE_NAME
+              valueFrom:
+                fieldRef:
+                  fieldPath: spec.nodeName
+            - name: POD_NAME
+              valueFrom:
+                fieldRef:
+                  fieldPath: metadata.name
+            - name: POD_NAMESPACE
+              valueFrom:
+                fieldRef:
+                  fieldPath: metadata.namespace
+            - name: POD_IP
+              valueFrom:
+                fieldRef:
+                  fieldPath: status.podIP
+            - name: POD_SERVICE_ACCOUNT
+              valueFrom:
+                fieldRef:
+                  fieldPath: spec.serviceAccountName
+            - name: OD4ICI_REGISTRATION_HOST
+              value: {{ template "icp4i-od.manager.registration-host" . }}
+            - name: OD4ICI_REGISTRATION_PORT
+              value: "8090"
+      restartPolicy: Never
+  backoffLimit: 10
+{{ end }}

@@ -2,4 +2,4 @@ apiVersion: v1
 appVersion: "1.0"
 description: A Helm chart for deploying IBM API Connect gateway to Kubernetes
 name: dynamic-gateway-service
-version: 1.0.38
+version: 1.0.39

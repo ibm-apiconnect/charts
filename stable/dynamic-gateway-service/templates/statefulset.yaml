@@ -152,6 +152,108 @@ spec:
 {{/* No initContainer if requirements are not satisfied */}}
 {{- end }}
       containers:
+{{- if eq ( .Values.odTracing.enabled | default "false" ) "true" }}
+        # sidecar - od agent
+        - name: od-tracing-agent
+          image: {{ .Values.odTracing.imageAgent }}
+          imagePullPolicy: {{ .Values.odTracing.pullPolicy }}
+          command: ["/go/bin/agent-linux"]
+          args:
+            - "--jaeger.tags=sourceNamespace={{ .Release.Namespace }}"
+          ports:
+            - containerPort: 5775
+              protocol: UDP
+            - containerPort: 6831
+              protocol: UDP
+            - containerPort: 6832
+              protocol: UDP
+            - containerPort: 5778
+              protocol: TCP
+          env:
+            - name: COLLECTOR_HOST_PORT
+              value : {{ template "odTracing.collector.host-port" . }}
+            - name: REPORTER_TYPE
+              value : "grpc"
+            - name: REPORTER_GRPC_HOST_PORT
+              value : {{ template "odTracing.collector.grpc-host-port" . }}
+            - name: REPORTER_GRPC_TLS
+              value : "false"
+            - name: OD_SOURCE_NAMESPACE
+              value : {{ .Release.Namespace }}
+          resources:
+            limits:
+              cpu: 500m
+              memory: 512Mi
+            requests:
+              cpu: 256m
+              memory: 128Mi
+           # sidecar - od collector
+        - name: od-tracing-collector
+          image: {{ .Values.odTracing.imageCollector }}
+          imagePullPolicy: {{ .Values.odTracing.pullPolicy }}
+          volumeMounts:
+            - name: icp4i-od-ca-certificate
+              mountPath: "/usr/share/jaeger/ca/certs"
+          ports:
+            - containerPort: 14250
+              name: grpc
+              protocol: TCP
+            - containerPort: 14267
+              name: tchannel
+              protocol: TCP
+            - containerPort: 14268
+              name: http
+              protocol: TCP
+            - containerPort: 14269
+              name: healthcheck
+              protocol: TCP
+            - containerPort: 9411
+              name: zipkin
+              protocol: TCP
+          env:
+            - name: SPAN_STORAGE_TYPE
+              value: elasticsearch
+            - name: ES_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: {{ template "odTracing.collector.elasticsearch-secret-name" . }}
+                  key: password
+            - name: ES_USERNAME
+              valueFrom:
+                secretKeyRef:
+                  name: {{ template "odTracing.collector.elasticsearch-secret-name" . }}
+                  key: username
+            - name: ES_SERVER_URLS
+              value: {{ template "odTracing.collector.elasticsearch-url" . }}
+            - name: ES_TLS_CA
+              value: '/usr/share/jaeger/ca/certs/icp4i-od-cacert.pem'
+            - name: COLLECTOR_PORT
+              value: "14267"
+            - name: COLLECTOR_HTTP_PORT
+              value: "14268"
+            - name: COLLECTOR_ZIPKIN_HTTP_PORT
+              value: "9411"
+            - name: COLLECTOR_GRPC_TLS
+              value: "false"
+          resources:
+            limits:
+              cpu: 500m
+              memory: 512Mi
+            requests:
+              cpu: 256m
+              memory: 128Mi
+           # Set liveness probe to determine collector is running
+          readinessProbe:
+            httpGet:
+              port: 14269
+            initialDelaySeconds: 10
+            periodSeconds: 5
+          livenessProbe:
+            httpGet:
+              port: 14269
+            initialDelaySeconds: 10
+            periodSeconds: 5
+{{- end }}
         - name: {{ .Chart.Name }}
           image: "{{ .Values.datapower.image.repository }}:{{ .Values.datapower.image.tag }}"
           imagePullPolicy: {{ .Values.datapower.image.pullPolicy }}
@@ -312,6 +414,13 @@ spec:
 {{- else }}
               value: "false"
 {{- end }}
+            - name: "DATAPOWER_ENABLE_OPENTRACING"
+{{- if eq ( .Values.odTracing.enabled | default "disabled" ) "enabled" }}
+              value: "true"
+{{- else }}
+              value: "false"
+{{- end }}
+
           resources:
 {{ toYaml .Values.datapower.resources | indent 12 }}
           ports:
@@ -416,6 +525,13 @@ spec:
         - name: root-secure-usrcerts-apiconnect-gwd-volume
           secret:
             secretName: {{ .Values.datapower.apicGatewayServiceTLSSecret }}
+{{- if eq ( .Values.odTracing.enabled | default "false" ) "true" }}
+        - name: icp4i-od-ca-certificate
+          secret:
+            secretName: {{ template "odTracing.collector.elasticsearch-secret-name" . }}
+            optional: true
+{{- end }}
+
 {{- if eq (.Values.datapower.env.enableTMS | default "off") "on" }}
   volumeClaimTemplates:
   - metadata:
