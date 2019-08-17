@@ -1,4 +1,4 @@
-{{- if .Values.odTracing.enabled }}
+{{- if eq (.Values.odTracing.enabled | default "false") "true" }}
 apiVersion: batch/v1
 kind: Job
 metadata:
