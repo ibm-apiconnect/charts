@@ -181,6 +181,7 @@ ingress:
 odTracing:
   enabled: "false"
   pullPolicy: "IfNotPresent"
+  pullSecret:
   # od manager FQDN : icp4i-od.<od manager namespace>.svc.cluster.local
   odTracingRegistrationHostname: icp4i-od.<od manager namespace>.svc
   # od Store (elasticsearch) FQDN : icp4i-od.<od manager namespace>.svc.cluster.local

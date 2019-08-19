@@ -2,7 +2,7 @@
 apiVersion: batch/v1
 kind: Job
 metadata:
-  name: icp4i-od-registration-job
+  name: {{ .Release.Name }}-icp4i-od-registration-job
 spec:
   template:
     spec:
