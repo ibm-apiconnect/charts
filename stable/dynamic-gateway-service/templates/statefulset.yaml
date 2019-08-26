@@ -420,7 +420,7 @@ spec:
               value: "false"
 {{- end }}
             - name: "DATAPOWER_ENABLE_OPENTRACING"
-{{- if eq ( .Values.odTracing.enabled | default "disabled" ) "enabled" }}
+{{- if eq ( .Values.odTracing.enabled | default "false" ) "true" }}
               value: "true"
 {{- else }}
               value: "false"
