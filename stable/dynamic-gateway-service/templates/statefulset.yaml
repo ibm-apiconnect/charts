@@ -392,11 +392,18 @@ spec:
             - name: tms
               mountPath: /drouter/ramdisk2/mnt/raid-volume/raid0/local
 {{- end }}
+{{- if eq (.Values.odTracing.enabled | default "false") "true" }}
+            - name: icp4i-od-jaeger-client
+              mountPath: /opt/ibm/datapower/opentracing
+{{- end }}
 {{- if eq ( .Values.odTracing.enabled | default "false" ) "true" }}
         # sidecar - od agent
         - name: od-tracing-agent
           image: {{ .Values.odTracing.imageAgent }}
           imagePullPolicy: {{ .Values.odTracing.pullPolicy }}
+          volumeMounts:
+            - name: icp4i-od-ca-certificate
+              mountPath: "/usr/share/jaeger/ca/certs"
           command: ["/go/bin/agent-linux"]
           args:
             - "--jaeger.tags=sourceNamespace={{ .Release.Namespace }}"
@@ -420,6 +427,8 @@ spec:
               value : "false"
             - name: OD_SOURCE_NAMESPACE
               value : {{ .Release.Namespace }}
+            - name: ES_TLS_CA
+              value: '/usr/share/jaeger/ca/certs/icp4i-od-cacert.pem'
           resources:
             limits:
               cpu: 500m
@@ -427,6 +436,21 @@ spec:
             requests:
               cpu: 256m
               memory: 128Mi
+          readinessProbe:
+            httpGet:
+              path: /?service=health
+              port: 5778
+            initialDelaySeconds: {{ .Values.odTracing.agent.readinessProbe.initialDelaySeconds }}
+            periodSeconds: {{ .Values.odTracing.agent.readinessProbe.periodSeconds }}
+            timeoutSeconds: {{ .Values.odTracing.agent.readinessProbe.timeoutSeconds }}
+            failureThreshold: {{ .Values.odTracing.agent.readinessProbe.failureThreshold }}
+          livenessProbe:
+            tcpSocket:
+              port: 5778
+            initialDelaySeconds: {{ .Values.odTracing.agent.livenessProbe.initialDelaySeconds }}
+            periodSeconds: {{ .Values.odTracing.agent.livenessProbe.periodSeconds }}
+            timeoutSeconds: {{ .Values.odTracing.agent.livenessProbe.timeoutSeconds }}
+            failureThreshold: {{ .Values.odTracing.agent.livenessProbe.failureThreshold }}
            # sidecar - od collector
         - name: od-tracing-collector
           image: {{ .Values.odTracing.imageCollector }}
@@ -449,6 +473,9 @@ spec:
               protocol: TCP
             - containerPort: 9411
               name: zipkin
+              protocol: TCP
+            - containerPort: 14987
+              name: liveliness
               protocol: TCP
           env:
             - name: SPAN_STORAGE_TYPE
@@ -486,13 +513,17 @@ spec:
           readinessProbe:
             httpGet:
               port: 14269
-            initialDelaySeconds: 10
-            periodSeconds: 5
+            initialDelaySeconds: {{ .Values.odTracing.collector.readinessProbe.initialDelaySeconds }}
+            periodSeconds: {{ .Values.odTracing.collector.readinessProbe.periodSeconds }}
+            timeoutSeconds: {{ .Values.odTracing.collector.readinessProbe.timeoutSeconds }}
+            failureThreshold: {{ .Values.odTracing.collector.readinessProbe.failureThreshold }}
           livenessProbe:
-            httpGet:
-              port: 14269
-            initialDelaySeconds: 10
-            periodSeconds: 5
+            tcpSocket:
+              port: 14987
+            initialDelaySeconds: {{ .Values.odTracing.collector.livenessProbe.initialDelaySeconds }}
+            periodSeconds: {{ .Values.odTracing.collector.livenessProbe.periodSeconds }}
+            timeoutSeconds: {{ .Values.odTracing.collector.livenessProbe.timeoutSeconds }}
+            failureThreshold: {{ .Values.odTracing.collector.livenessProbe.failureThreshold }}
 {{- end }}
       volumes:
         - name: init-config-volume
@@ -535,6 +566,9 @@ spec:
           secret:
             secretName: {{ template "odTracing.collector.elasticsearch-secret-name" . }}
             optional: true
+        - name: icp4i-od-jaeger-client
+          configMap:
+            name: {{ template "dynamic-gateway-service.fullname" . }}-static-jaeger-client
 {{- end }}
 
 {{- if eq (.Values.datapower.env.enableTMS | default "off") "on" }}

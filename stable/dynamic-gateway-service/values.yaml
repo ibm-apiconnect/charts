@@ -194,4 +194,29 @@ odTracing:
   odTracingDataHostname: od-store-od.<od manager namespace>.svc
   imageAgent: ibmcom/icp4i_od_agent:1.0.0
   imageCollector: ibmcom/icp4i_od_collector:1.0.0
+  collector:
+    livenessProbe:
+      initialDelaySeconds: 10
+      periodSeconds: 10
+      timeoutSeconds: 2
+      failureThreshold: 3
+
+    readinessProbe:
+      initialDelaySeconds: 10
+      periodSeconds: 10
+      timeoutSeconds: 2
+      failureThreshold: 3
+
+  agent:
+    livenessProbe:
+      initialDelaySeconds: 10
+      periodSeconds: 10
+      timeoutSeconds: 2
+      failureThreshold: 3
+
+    readinessProbe:
+      initialDelaySeconds: 10
+      periodSeconds: 10
+      timeoutSeconds: 2
+      failureThreshold: 3
 
