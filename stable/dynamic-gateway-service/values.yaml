@@ -189,11 +189,11 @@ odTracing:
   pullPolicy: "IfNotPresent"
   pullSecret:
   # od manager FQDN : icp4i-od.<od manager namespace>.svc.cluster.local
-  odTracingRegistrationHostname: icp4i-od.<od manager namespace>.svc
+  odTracingRegistrationHostname: icp4i-od.tracing.svc
   # od Store (elasticsearch) FQDN : icp4i-od.<od manager namespace>.svc.cluster.local
-  odTracingDataHostname: od-store-od.<od manager namespace>.svc
-  imageAgent: ibmcom/icp4i_od_agent:1.0.0
-  imageCollector: ibmcom/icp4i_od_collector:1.0.0
+  odTracingDataHostname: od-store-od.tracing.svc
+  imageAgent: ibmcom/icp4i_od_agent:1.0.0-amd64
+  imageCollector: ibmcom/icp4i_od_collector:1.0.0-amd64
   collector:
     livenessProbe:
       initialDelaySeconds: 10

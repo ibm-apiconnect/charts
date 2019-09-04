@@ -5,6 +5,7 @@ reporter:
     queueSize: 1000
     bufferFlushInterval: 10
 sampler:
-  type: const
-  param: 1
-  samplingRefreshInterval: 5
+  type: remote
+  param: 0.0
+  samplingRefreshInterval: 10
+  samplingServerURL: http://127.0.0.1:5778
