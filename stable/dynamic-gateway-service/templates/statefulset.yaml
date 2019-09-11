@@ -323,6 +323,10 @@ spec:
 {{- else }}
               value: "false"
 {{- end }}
+{{- if .Values.cip }}
+            - name: "DATAPOWER_IS_ICP4I"
+              value: "true"
+{{- end }}
 
           resources:
 {{ toYaml .Values.datapower.resources | indent 12 }}
