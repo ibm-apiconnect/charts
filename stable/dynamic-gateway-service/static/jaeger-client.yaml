@@ -8,4 +8,4 @@ sampler:
   type: remote
   param: 0.0
   samplingRefreshInterval: 10
-  samplingServerURL: http://127.0.0.1:5778
+  samplingServerURL: http://127.0.0.1:5778/sampling
