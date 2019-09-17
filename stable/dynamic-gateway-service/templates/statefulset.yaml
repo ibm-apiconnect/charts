@@ -27,41 +27,34 @@ spec:
         prometheus.io/port: '63512'
         prometheus.io/target: '127.0.0.1:{{ .Values.datapower.snmpPort }}'
         prometheus.io/module: 'dpStatusMIB'
+{{- $licenseVersion := quote .Values.datapower.licenseVersion -}}
 {{- if .Values.cip }}
-  {{- with .Values.datapower }}
-    {{- if .licenseVersion }}
-      {{- if or (eq .licenseVersion "Production") (eq .licenseVersion "Nonproduction") (eq .licenseVersion "Developers") }}
-        productVersion: "{{ .image.tag }}"
-        {{- if eq .licenseVersion "Production" }}
+  {{- if eq (include "datapower-requirements.validLicenseVersion" .) "true" }}
+        productVersion: "{{ .Values.datapower.image.tag }}"
+    {{- if eq $licenseVersion ("Production" | quote) }}
         productID: 'DPGateway_5737_I89_ICIP_chargeable'
         productName: 'IBM Cloud Integration Platform - DataPower Gateway (Chargeable)'
-        {{- else if eq .licenseVersion "Nonproduction" }}
+    {{- else if eq $licenseVersion ("Nonproduction" | quote) }}
         productID: 'DPGateway_5737_I89_ICIP_nonProd_chargeable'
         productName: 'IBM Cloud Integration Platform (non-production) - DataPower Gateway (Chargeable)'
-        {{- else }}
+    {{- else }}
         productID: 'IBMDataPowerGatewayVirtualEdition_{{ .image.tag }}_Developers'
-        {{- end }}
-      {{- end }}
     {{- end }}
   {{- end }}
 {{- else }}
-  {{- with .Values.datapower }}
-    {{- if .licenseVersion }}
-      {{- if or (eq .licenseVersion "Production") (eq .licenseVersion "Nonproduction") (eq .licenseVersion "Developers") }}
-        productFlexpointBundle: "{{ .flexpointBundle }}"
+  {{- if eq (include "datapower-requirements.validLicenseVersion" .) "true" }}
+        productFlexpointBundle: "{{ .Values.datapower.flexpointBundle }}"
         productMetric: "PROCESSOR_VALUE_UNIT"
-        productVersion: "{{ .image.tag }}"
-        {{- if eq .licenseVersion "Production" }}
+        productVersion: "{{ .Values.datapower.image.tag }}"
+    {{- if eq $licenseVersion ("Production" | quote) }}
         productID: '887a7b80dd7b40c9b978ff085230604e'
         productChargedContainers: "all"
-        {{- else if eq .licenseVersion "Nonproduction" }}
+    {{- else if eq $licenseVersion ("Nonproduction" | quote) }}
         productID: 'bd624448e8484592879f2e1a950686bd'
         productChargedContainers: "all"
-        {{- else }}
-        productID: 'IBMDataPowerGatewayVirtualEdition_{{ .image.tag }}_Developers'
+    {{- else }}
+        productID: 'IBMDataPowerGatewayVirtualEdition_{{ .Values.datapower.image.tag }}_Developers'
         productChargedContainers: ""
-        {{- end }}
-      {{- end }}
     {{- end }}
   {{- end }}
 {{- end }}
@@ -69,10 +62,15 @@ spec:
         app: {{ template "dynamic-gateway-service.name" . }}
         release: {{ .Release.Name }}
     spec:
-      {{- if .Values.datapower.image.pullSecrets }}
+      {{- if or .Values.datapower.image.pullSecrets .Values.odTracing.pullSecret }}
       imagePullSecrets:
+      {{- if .Values.datapower.image.pullSecrets }}
       {{- range .Values.datapower.image.pullSecrets }}
       - name: {{ .name }}
+      {{- end }}
+      {{- end }}
+      {{- if .Values.odTracing.pullSecret }}
+      - name: {{ .Values.odTracing.pullSecret }}
       {{- end }}
       {{- end }}
       hostNetwork: false
@@ -206,6 +204,8 @@ spec:
               value: "{{ template "datapower-requirements.validLicenseVersion" . }}"
             - name: DP_REQ_VALID_DPM_IMAGE_SET
               value: "{{ template "datapower-requirements.dpmImageSet" . }}"
+            - name: DP_REQ_HP_PEERING_OPTION_SET
+              value: "{{ template "datapower-requirements.hpPeeringOptionSet" . }}"
 {{- end }}
             - name: APICONNECT_K8S_NAMESPACE
               value: {{ .Release.Namespace }}
@@ -236,18 +236,15 @@ spec:
 {{- else }}
               value: "disabled"
 {{- end }}
+{{- if and (eq (.Values.datapower.apicGatewayServiceV5CompatibilityMode | default "on") "off") (eq (.Values.datapower.env.highPerformancePeering | default "") "on") }}
             - name: APICONNECT_DEDICATED_RL_PEERING
-{{/* Enforce valid values for dedicatedRateLimitPeering as 'on' and 'off' (default: 'off') */}}
-{{- if eq (.Values.datapower.env.dedicatedRateLimitPeering | default "off") "on" }}
               value: "on"
-{{- else }}
-              value: "off"
-{{- end }}
             - name: APICONNECT_DEDICATED_SUBS_PEERING
-{{/* Enforce valid values for dedicatedSubscriptionsPeering as 'on' and 'off' (default: 'off') */}}
-{{- if eq (.Values.datapower.env.dedicatedSubscriptionsPeering | default "off") "on" }}
               value: "on"
 {{- else }}
+            - name: APICONNECT_DEDICATED_RL_PEERING
+              value: "off"
+            - name: APICONNECT_DEDICATED_SUBS_PEERING
               value: "off"
 {{- end }}
             - name: GATEWAY_PEERING_MONITOR_PORT
@@ -296,6 +293,41 @@ spec:
               value: {{ .Values.datapower.env.datapowerLogLevel | quote }}
             - name: "PEERING_LOG_LEVEL"
               value: {{ .Values.datapower.env.peeringLogLevel }}
+            - name: "GWD_POLICY_DISABLE_LOG"
+{{- if eq .Values.datapower.env.policyDisableLog "true" }}
+              value: "true"
+{{- else }}
+              value: "false"
+{{- end }}
+            - name: "GWD_POLICY_DISABLE_XSLT"
+{{- if eq .Values.datapower.env.policyDisableXSLT "true" }}
+              value: "true"
+{{- else }}
+              value: "false"
+{{- end }}
+            - name: "GWD_POLICY_DISABLE_GATEWAYSCRIPT"
+{{- if eq .Values.datapower.env.policyDisableGatewayScript "true" }}
+              value: "true"
+{{- else }}
+              value: "false"
+{{- end }}
+            - name: "GWD_POLICY_DISABLE_RATELIMIT"
+{{- if eq .Values.datapower.env.policyDisableRateLimit "true" }}
+              value: "true"
+{{- else }}
+              value: "false"
+{{- end }}
+            - name: "DATAPOWER_ENABLE_OPENTRACING"
+{{- if eq ( .Values.odTracing.enabled | default "false" ) "true" }}
+              value: "true"
+{{- else }}
+              value: "false"
+{{- end }}
+{{- if .Values.cip }}
+            - name: "DATAPOWER_IS_ICP4I"
+              value: "true"
+{{- end }}
+
           resources:
 {{ toYaml .Values.datapower.resources | indent 12 }}
           ports:
@@ -337,7 +369,7 @@ spec:
             initialDelaySeconds: 180
             timeoutSeconds: 5
             periodSeconds: 10
-            failureThreshold: 5
+            failureThreshold: 12
           readinessProbe:
             httpGet:
               scheme: HTTPS
@@ -363,6 +395,139 @@ spec:
 {{- if eq (.Values.datapower.env.enableTMS | default "off") "on" }}
             - name: tms
               mountPath: /drouter/ramdisk2/mnt/raid-volume/raid0/local
+{{- end }}
+{{- if eq (.Values.odTracing.enabled | default "false") "true" }}
+            - name: icp4i-od-jaeger-client
+              mountPath: /opt/ibm/datapower/opentracing
+{{- end }}
+{{- if eq ( .Values.odTracing.enabled | default "false" ) "true" }}
+        # sidecar - od agent
+        - name: od-tracing-agent
+          image: {{ .Values.odTracing.imageAgent }}
+          imagePullPolicy: {{ .Values.odTracing.pullPolicy }}
+          volumeMounts:
+            - name: icp4i-od-ca-certificate
+              mountPath: "/usr/share/jaeger/ca/certs"
+          command: ["/go/bin/agent-linux"]
+          args:
+            - "--jaeger.tags=sourceNamespace={{ .Release.Namespace }}"
+          ports:
+            - containerPort: 5775
+              protocol: UDP
+            - containerPort: 6831
+              protocol: UDP
+            - containerPort: 6832
+              protocol: UDP
+            - containerPort: 5778
+              protocol: TCP
+          env:
+            - name: COLLECTOR_HOST_PORT
+              value : {{ template "odTracing.collector.host-port" . }}
+            - name: REPORTER_TYPE
+              value : "grpc"
+            - name: REPORTER_GRPC_HOST_PORT
+              value : {{ template "odTracing.collector.grpc-host-port" . }}
+            - name: REPORTER_GRPC_TLS
+              value : "false"
+            - name: OD_SOURCE_NAMESPACE
+              value : {{ .Release.Namespace }}
+            - name: ES_TLS_CA
+              value: '/usr/share/jaeger/ca/certs/icp4i-od-cacert.pem'
+          resources:
+            limits:
+              cpu: 500m
+              memory: 512Mi
+            requests:
+              cpu: 256m
+              memory: 128Mi
+          readinessProbe:
+            httpGet:
+              path: /?service=health
+              port: 5778
+            initialDelaySeconds: {{ .Values.odTracing.agent.readinessProbe.initialDelaySeconds }}
+            periodSeconds: {{ .Values.odTracing.agent.readinessProbe.periodSeconds }}
+            timeoutSeconds: {{ .Values.odTracing.agent.readinessProbe.timeoutSeconds }}
+            failureThreshold: {{ .Values.odTracing.agent.readinessProbe.failureThreshold }}
+          livenessProbe:
+            tcpSocket:
+              port: 5778
+            initialDelaySeconds: {{ .Values.odTracing.agent.livenessProbe.initialDelaySeconds }}
+            periodSeconds: {{ .Values.odTracing.agent.livenessProbe.periodSeconds }}
+            timeoutSeconds: {{ .Values.odTracing.agent.livenessProbe.timeoutSeconds }}
+            failureThreshold: {{ .Values.odTracing.agent.livenessProbe.failureThreshold }}
+           # sidecar - od collector
+        - name: od-tracing-collector
+          image: {{ .Values.odTracing.imageCollector }}
+          imagePullPolicy: {{ .Values.odTracing.pullPolicy }}
+          volumeMounts:
+            - name: icp4i-od-ca-certificate
+              mountPath: "/usr/share/jaeger/ca/certs"
+          ports:
+            - containerPort: 14250
+              name: grpc
+              protocol: TCP
+            - containerPort: 14267
+              name: tchannel
+              protocol: TCP
+            - containerPort: 14268
+              name: http
+              protocol: TCP
+            - containerPort: 14269
+              name: healthcheck
+              protocol: TCP
+            - containerPort: 9411
+              name: zipkin
+              protocol: TCP
+            - containerPort: 14987
+              name: liveliness
+              protocol: TCP
+          env:
+            - name: SPAN_STORAGE_TYPE
+              value: elasticsearch
+            - name: ES_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: {{ template "odTracing.collector.elasticsearch-secret-name" . }}
+                  key: password
+            - name: ES_USERNAME
+              valueFrom:
+                secretKeyRef:
+                  name: {{ template "odTracing.collector.elasticsearch-secret-name" . }}
+                  key: username
+            - name: ES_SERVER_URLS
+              value: {{ template "odTracing.collector.elasticsearch-url" . }}
+            - name: ES_TLS_CA
+              value: '/usr/share/jaeger/ca/certs/icp4i-od-cacert.pem'
+            - name: COLLECTOR_PORT
+              value: "14267"
+            - name: COLLECTOR_HTTP_PORT
+              value: "14268"
+            - name: COLLECTOR_ZIPKIN_HTTP_PORT
+              value: "9411"
+            - name: COLLECTOR_GRPC_TLS
+              value: "false"
+          resources:
+            limits:
+              cpu: 500m
+              memory: 512Mi
+            requests:
+              cpu: 256m
+              memory: 128Mi
+           # Set liveness probe to determine collector is running
+          readinessProbe:
+            httpGet:
+              port: 14269
+            initialDelaySeconds: {{ .Values.odTracing.collector.readinessProbe.initialDelaySeconds }}
+            periodSeconds: {{ .Values.odTracing.collector.readinessProbe.periodSeconds }}
+            timeoutSeconds: {{ .Values.odTracing.collector.readinessProbe.timeoutSeconds }}
+            failureThreshold: {{ .Values.odTracing.collector.readinessProbe.failureThreshold }}
+          livenessProbe:
+            tcpSocket:
+              port: 14987
+            initialDelaySeconds: {{ .Values.odTracing.collector.livenessProbe.initialDelaySeconds }}
+            periodSeconds: {{ .Values.odTracing.collector.livenessProbe.periodSeconds }}
+            timeoutSeconds: {{ .Values.odTracing.collector.livenessProbe.timeoutSeconds }}
+            failureThreshold: {{ .Values.odTracing.collector.livenessProbe.failureThreshold }}
 {{- end }}
       volumes:
         - name: init-config-volume
@@ -400,6 +565,16 @@ spec:
         - name: root-secure-usrcerts-apiconnect-gwd-volume
           secret:
             secretName: {{ .Values.datapower.apicGatewayServiceTLSSecret }}
+{{- if eq ( .Values.odTracing.enabled | default "false" ) "true" }}
+        - name: icp4i-od-ca-certificate
+          secret:
+            secretName: {{ template "odTracing.collector.elasticsearch-secret-name" . }}
+            optional: true
+        - name: icp4i-od-jaeger-client
+          configMap:
+            name: {{ template "dynamic-gateway-service.fullname" . }}-static-jaeger-client
+{{- end }}
+
 {{- if eq (.Values.datapower.env.enableTMS | default "off") "on" }}
   volumeClaimTemplates:
   - metadata:

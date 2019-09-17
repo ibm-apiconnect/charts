@@ -1,0 +1,7 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: {{ template "dynamic-gateway-service.fullname" . }}-static-jaeger-client
+data:
+  jaeger-client.yaml: |
+{{ .Files.Get "static/jaeger-client.yaml" | indent 4 }}

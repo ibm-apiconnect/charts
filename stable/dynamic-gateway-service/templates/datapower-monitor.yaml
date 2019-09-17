@@ -38,7 +38,7 @@ apiVersion: v1
 kind: Service
 metadata:
   name: {{ .Release.Name }}-dpm-svc
-  label:
+  labels:
     app: datapower-monitor
 spec:
   ports:
@@ -88,6 +88,10 @@ spec:
             value: "true"
           - name: LIVENESS_CHECK_SERVER_PORT
             value: {{ .Values.datapowerMonitor.livenessPort | default 8080 | quote }}
+          - name: POD_LIFECYCLE_EVENT_DEBOUNCE_MS
+            value: {{ .Values.datapowerMonitor.env.lifecycleDebounceMs | default 10000 | quote }}
+          - name: PEERING_RECOVERY_CHECK_INTERVAL_MS
+            value: {{ .Values.datapowerMonitor.env.peeringRecoveryCheckIntervalMs | default 1000 | quote }}
         ports:
           - containerPort: {{ .Values.datapowerMonitor.livenessPort | default 8080 }}
             name: dpm-liveness
@@ -101,12 +105,7 @@ spec:
           periodSeconds: 10
           failureThreshold: 3
         resources:
-          requests:
-            cpu: "1"
-            memory: 256Mi
-          limits:
-            cpu: "2"
-            memory: "2Gi"
+{{ toYaml .Values.datapowerMonitor.resources | indent 10 }}
 {{- if .Values.datapower.adminUserSecret }}
         volumeMounts:
           - name: admin-user-password

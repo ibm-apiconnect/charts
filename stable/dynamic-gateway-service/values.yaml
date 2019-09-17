@@ -32,12 +32,11 @@ datapower:
     tmsPeeringEnableSSL: "on"
     # Should be on or off
     enableTMS: "off"
-    # Dedicated rate-limit peering
-    # Should be on or off
-    dedicatedRateLimitPeering: "off"
-    # Dedicated subscriptions peering
-    # Should be on or off
-    dedicatedSubscriptionsPeering: "off"
+
+    # High-performance Peering
+    # Should be on or off. No default should be set, users MUST declare one way or another
+    highPerformancePeering:
+
     # peeringLogLevel sets log level for gateway-peering operation. Should only be internal, warning, notice, verbose, or debug.
     peeringLogLevel: "internal"
     # Format type for logging. Can be json-icp, text, raw, csv, cbe, or xml
@@ -45,6 +44,14 @@ datapower:
     defaultLogFormat: "text"
     # Log level for DataPower. Should be 0-7
     datapowerLogLevel: "3"
+    # Set to "true" if the log policy shold be disabled
+    policyDisableLog: "false"
+    # Set to "true" if the xslt policy shold be disabled
+    policyDisableXSLT: "false"
+    # Set to "true" if the gatewayscript policy shold be disabled
+    policyDisableGatewayScript: "false"
+    # Set to "true" if the ratelimit policy shold be disabled
+    policyDisableRateLimit: "false"
   # In order to replace the default admin credentials, the new credentials should be configured via Secret and `.Values.datapower.adminUserSecret` must be set to the name of
   # the Secret containing the admin user's credentials
   #
@@ -136,9 +143,19 @@ service:
 #
 datapowerMonitor:
   livenessPort: 8080
+  env:
+    lifecycleDebounceMs: 10000
+    peeringRecoveryCheckIntervalMs: 1000
   image:
     repository:
     tag:
+  resources:
+    requests:
+      memory: "256Mi"
+      cpu: "100m"
+    limits:
+      memory: "1Gi"
+      cpu: "250m"
 
 
 #-----------------------------------------------------------------------------
@@ -161,3 +178,45 @@ ingress:
     hosts:
     - name: gwd.example.com
     annotations:
+
+
+
+#-----------------------------------------------------------------------------
+# Open Tracing Section
+#
+odTracing:
+  enabled: "false"
+  pullPolicy: "IfNotPresent"
+  pullSecret:
+  # od manager FQDN : icp4i-od.<od manager namespace>.svc.cluster.local
+  odTracingRegistrationHostname: icp4i-od.tracing.svc
+  # od Store (elasticsearch) FQDN : icp4i-od.<od manager namespace>.svc.cluster.local
+  odTracingDataHostname: od-store-od.tracing.svc
+  imageAgent: ibmcom/icp4i_od_agent:1.0.0-amd64
+  imageCollector: ibmcom/icp4i_od_collector:1.0.0-amd64
+  collector:
+    livenessProbe:
+      initialDelaySeconds: 10
+      periodSeconds: 10
+      timeoutSeconds: 2
+      failureThreshold: 3
+
+    readinessProbe:
+      initialDelaySeconds: 10
+      periodSeconds: 10
+      timeoutSeconds: 2
+      failureThreshold: 3
+
+  agent:
+    livenessProbe:
+      initialDelaySeconds: 10
+      periodSeconds: 10
+      timeoutSeconds: 2
+      failureThreshold: 3
+
+    readinessProbe:
+      initialDelaySeconds: 10
+      periodSeconds: 10
+      timeoutSeconds: 2
+      failureThreshold: 3
+
