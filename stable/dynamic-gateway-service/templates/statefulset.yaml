@@ -138,7 +138,7 @@ spec:
               mountPath: /drouter/ramdisk2
 {{- if eq (.Values.datapower.env.enableTMS | default "off") "on" }}
             - name: tms
-              mountPath: /drouter/ramdisk2/mnt/raid-volume/raid0/local
+              mountPath: /drouter/ramdisk2/mnt/raid-volume/raid0
 {{- end }}
 {{- if .Values.datapower.adminUserSecret }}
             - name: init-admin-user-secret
@@ -185,6 +185,7 @@ spec:
 {{- if eq (include "datapower-requirements.satisfied" .) "true"}}
               set -x
               export $(env | grep ^DATAPOWER_ | cut -d= -f1)
+              sh /start/migrate-tms-pv.sh
               /root/node /start/gateway-peering.js
               exec /start.sh --log-format {{ .Values.datapower.env.defaultLogFormat }}
 {{- else }}
@@ -378,7 +379,7 @@ spec:
               mountPath: /drouter/temporary
 {{- if eq (.Values.datapower.env.enableTMS | default "off") "on" }}
             - name: tms
-              mountPath: /drouter/ramdisk2/mnt/raid-volume/raid0/local
+              mountPath: /drouter/ramdisk2/mnt/raid-volume/raid0
 {{- end }}
       volumes:
         - name: init-config-volume
