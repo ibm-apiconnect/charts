@@ -146,6 +146,10 @@ auto-startup.cfg: |
       report-history 5
     exit
 
+{{ range .Values.datapower.loggingService }}
+    logging event default-log "{{ .category }}" "{{ .level }}"
+{{- end }}
+
     %if% isfile temporary:///backtrace
     save error-report
     %endif%
