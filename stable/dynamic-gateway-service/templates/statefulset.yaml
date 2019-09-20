@@ -427,6 +427,7 @@ spec:
         - name: root-secure-usrcerts-apiconnect-apim-volume
           secret:
             secretName: {{ .Values.datapower.apimVeloxCertsSecret }}
+{{- end }}
 {{- if .Values.datapower.additionalConfig }}
         - name: init-additional-config-volume
           configMap:
