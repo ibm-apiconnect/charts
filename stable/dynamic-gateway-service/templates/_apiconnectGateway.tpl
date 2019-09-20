@@ -470,6 +470,94 @@ apiconnect.cfg: |
     exit
 {{- end }}
 
+{{- if eq (.Values.datapower.env.syslogState | default "disabled") "enabled" }}
+{{- if .Values.datapower.env.syslogTLSSecret }}
+{{/*
+    # need a way to determine whether a key is included or not....
+    crypto
+      key api_probe_key cert:///syslog/key.pem
+    exit
+*/}}
+
+    crypto
+      certificate syslog_cert cert:///syslog/cert.pem
+    exit
+
+    crypto
+      valcred syslog_valcred
+        admin-state enabled
+        certificate syslog_cert
+      exit
+    exit
+
+    crypto
+      ssl-client syslog_ssl_client
+        reset
+        admin-state enabled
+        protocols TLSv1d2
+        ciphers ECDHE_ECDSA_WITH_AES_256_GCM_SHA384
+        ciphers ECDHE_RSA_WITH_AES_256_GCM_SHA384
+        ciphers ECDHE_ECDSA_WITH_AES_256_CBC_SHA384
+        ciphers ECDHE_RSA_WITH_AES_256_CBC_SHA384
+        ciphers ECDHE_ECDSA_WITH_AES_256_CBC_SHA
+        ciphers ECDHE_RSA_WITH_AES_256_CBC_SHA
+        ciphers DHE_DSS_WITH_AES_256_GCM_SHA384
+        ciphers DHE_RSA_WITH_AES_256_GCM_SHA384
+        ciphers DHE_RSA_WITH_AES_256_CBC_SHA256
+        ciphers DHE_DSS_WITH_AES_256_CBC_SHA256
+        ciphers DHE_RSA_WITH_AES_256_CBC_SHA
+        ciphers DHE_DSS_WITH_AES_256_CBC_SHA
+        ciphers RSA_WITH_AES_256_GCM_SHA384
+        ciphers RSA_WITH_AES_256_CBC_SHA256
+        ciphers RSA_WITH_AES_256_CBC_SHA
+        ciphers ECDHE_ECDSA_WITH_AES_128_GCM_SHA256
+        ciphers ECDHE_RSA_WITH_AES_128_GCM_SHA256
+        ciphers ECDHE_ECDSA_WITH_AES_128_CBC_SHA256
+        ciphers ECDHE_RSA_WITH_AES_128_CBC_SHA256
+        ciphers ECDHE_ECDSA_WITH_AES_128_CBC_SHA
+        ciphers ECDHE_RSA_WITH_AES_128_CBC_SHA
+        ciphers DHE_DSS_WITH_AES_128_GCM_SHA256
+        ciphers DHE_RSA_WITH_AES_128_GCM_SHA256
+        ciphers DHE_RSA_WITH_AES_128_CBC_SHA256
+        ciphers DHE_DSS_WITH_AES_128_CBC_SHA256
+        ciphers DHE_RSA_WITH_AES_128_CBC_SHA
+        ciphers DHE_DSS_WITH_AES_128_CBC_SHA
+        ciphers RSA_WITH_AES_128_GCM_SHA256
+        ciphers RSA_WITH_AES_128_CBC_SHA256
+        ciphers RSA_WITH_AES_128_CBC_SHA
+        ciphers ECDHE_ECDSA_WITH_3DES_EDE_CBC_SHA
+        ciphers ECDHE_RSA_WITH_3DES_EDE_CBC_SHA
+        ciphers DHE_RSA_WITH_3DES_EDE_CBC_SHA
+        ciphers DHE_DSS_WITH_3DES_EDE_CBC_SHA
+        ciphers RSA_WITH_3DES_EDE_CBC_SHA
+        ssl-client-features use-sni
+        valcred syslog_valcred
+        validate-server-cert on
+        caching
+        cache-timeout 300
+        cache-size 100
+        curves secp521r1
+        curves secp384r1
+        curves secp256k1
+        curves secp256r1
+      exit
+    exit
+{{- end }}
+
+    %if% available "include-config"
+
+    include-config "syslog-tcp-target"
+      config-url "config:///syslog.cfg"
+      auto-execute
+      no interface-detection
+    exit
+
+    exec "config:///syslog.cfg"
+
+    %endif%
+{{- end }}
+
+
 {{- if .Values.datapower.apicGatewayServiceV5CompatibilityMode }}
 {{- if eq .Values.datapower.apicGatewayServiceV5CompatibilityMode "off" }}
     config-sequence "apiconnect"
