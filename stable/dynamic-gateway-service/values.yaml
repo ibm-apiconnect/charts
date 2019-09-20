@@ -122,6 +122,9 @@ datapower:
   loggingService:
   - category: "apic-gw-service"
     level: "info"
+  additionalConfig:
+  additionalLocalTar:
+  additionalCerts:
   storage:
     tmsPeering:
       accessModes:
