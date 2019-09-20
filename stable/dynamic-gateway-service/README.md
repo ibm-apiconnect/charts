@@ -65,6 +65,9 @@ The helm chart has the following Values that can be overridden using the install
 | `datapower.snmpState`                                           | SNMP Service State(used for Prometheus monitoring)       | enabled               |
 | `datapower.snmpPort`                                            | SNMP Service Port(used for Prometheus monitoring)        | 1161                  |
 | `datapower.flexpointBundle`                                     | Flexpoint Bundle type for ILMT scanning                  | N/A                   |
+| `datapower.additionalConfig`                                    | List of domains and config files                         |                       |
+| `datapower.additionalLocalTar`                                  | Path to local directory tar file                         |                       |
+| `datapower.additionalCerts`                                     | List of domains and cert secrets                         |                       |
 | `datapower.storage.tmsPeering.accessModes`                      | Access Modes for the Token Management Service Disk       | [ReadWriteOnce]       |
 | `datapower.storage.tmsPeering.resources.requests.storage`       | Size for the Token Management Service Disk               | 10Gi                  |
 | `datapower.customDatapowerConfig`                               | Name of ConfigMap with one or more DataPower .cfg files  |                       |
@@ -85,6 +88,39 @@ Alternatively, a YAML file that specifies the values for the parameters can be p
 ```bash
 $ helm install --name my-release -f values.yaml stable/dynamic-gateway-service
 ```
+
+
+### Adding new config
+New DataPower configuration can be added into the gateway by use of the `datapower.additionalConfig` value. This value takes the form of a list of domain-config pairs, like so:
+```
+datapower:
+  additionalConfig:
+  - domain: "default"
+    config: "config/default.cfg
+  - domain: "apiconnect"
+    config: "config/apiconnect.cfg"
+```
+The paths to config files must be inside the chart directory. These config files should be standard DataPower CLI config.
+
+### Adding local files
+Local files can be added into the gateway deployment by use of the `datapower.additionalLocalTar` value. This value is a path to a tar file which contains all the files you wish to add. This tar file should be a well formatted DataPower `local:` directory where files intended for the `default` domain are on the top level and all files intended for a different domain are in a subdirectory named for that domain.
+
+### Adding certificates
+Certificates and other crypto files can be added to the `cert:` directory by use of the `datapower.additionalCerts` value. This value takes the form of a list of domain-secret pairs, like so:
+```
+datapower:
+  additionalCerts:
+  - domain: "default"
+    secret: "some-default-cert-secret"
+  - domain: "apiconnect"
+    secret: "some-apiconnect-cert-secret"
+```
+The secrets are Kubernetes secrets which contain the crypto files you wish to use. To create the secret from an existing crypto key-cert pair:
+```
+kubectl create secret generic my-secret --from-file=/path/to/key.pem --from-file=/path/to/cert.pem
+```
+
+
 
 [View the official IBM DataPower Gateway for Developers Docker Image in Docker Hub](https://hub.docker.com/r/ibmcom/datapower/)
 

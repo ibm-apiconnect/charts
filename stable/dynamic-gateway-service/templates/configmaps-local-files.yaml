@@ -1,0 +1,9 @@
+{{- if .Values.datapower.additionalLocalTar }}
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: {{ template "dynamic-gateway-service.fullname" . }}-local-files
+data:
+  local.tar.gz: |
+{{ $.Files.Get .Values.datapower.additionalLocalTar | b64enc | indent 4 -}}
+{{- end }}

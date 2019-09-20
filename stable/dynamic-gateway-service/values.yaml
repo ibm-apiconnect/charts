@@ -74,6 +74,7 @@ datapower:
   #
   # In all of the examples above, `.Values.datapower.adminUserSecret` should be set to 'admin-credentials' for the admin user to be configured.
   adminUserSecret:
+  apimVeloxCertsSecret:
   customDatapowerConfig:
   replicaCount: 3
   gatewayPeeringLocalPort: 16380
@@ -119,6 +120,12 @@ datapower:
   snmpLocalAddress: 0.0.0.0
   snmpPort: 1161
   flexpointBundle:
+  loggingService:
+  - category: "apic-gw-service"
+    level: "info"
+  additionalConfig:
+  additionalLocalTar:
+  additionalCerts:
   storage:
     tmsPeering:
       accessModes:
