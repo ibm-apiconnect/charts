@@ -108,6 +108,15 @@ spec:
 {{- if .Values.datapower.adminUserSecret }}
               sh /init/scripts/init-admin-user.sh
 {{- end }}
+{{- if .Values.datapower.additionalConfig }}
+              sh /init/scripts/custom-config-handler.sh
+{{- end }}
+{{- if .Values.datapower.additionalLocalTar }}
+              sh /init/scripts/unpack-local-files.sh
+{{- end }}
+{{- if .Values.datapower.additionalCerts }}
+              sh /init/scripts/additional-cert-handler.sh
+{{- end }}
 {{- if .Values.datapower.customDatapowerConfig }}
               cat /init/custom-config/*.cfg > /drouter/config/apiconnect/custom-config.cfg
 {{- end }}
@@ -138,7 +147,7 @@ spec:
               mountPath: /drouter/ramdisk2
 {{- if eq (.Values.datapower.env.enableTMS | default "off") "on" }}
             - name: tms
-              mountPath: /drouter/ramdisk2/mnt/raid-volume/raid0/local
+              mountPath: /drouter/ramdisk2/mnt/raid-volume/raid0
 {{- end }}
 {{- if .Values.datapower.adminUserSecret }}
             - name: init-admin-user-secret
@@ -147,6 +156,24 @@ spec:
 {{- if .Values.datapower.customDatapowerConfig }}
             - name: init-custom-config-volume
               mountPath: /init/custom-config
+{{- end }}
+{{- if .Values.datapower.additionalConfig }}
+            - name: init-additional-config-volume
+              mountPath: /init/additional-config
+{{- end }}
+{{- if .Values.datapower.additionalLocalTar }}
+            - name: init-additional-local-volume
+              mountPath: /init/additional-local
+            - name: drouter-local-volume
+              mountPath: /drouter/local
+{{- end }}
+{{- if .Values.datapower.additionalCerts }}
+            - name: drouter-certs-volume
+              mountPath: /root/secure/usrcerts
+{{- range .Values.datapower.additionalCerts }}
+            - name: {{ .secret }}-volume
+              mountPath: /init/certs/{{ .domain }}/{{ .secret }}
+{{- end }}
 {{- end }}
 {{- else }}
 {{/* No initContainer if requirements are not satisfied */}}
@@ -185,6 +212,7 @@ spec:
 {{- if eq (include "datapower-requirements.satisfied" .) "true"}}
               set -x
               export $(env | grep ^DATAPOWER_ | cut -d= -f1)
+              sh /start/migrate-tms-pv.sh
               /root/node /start/gateway-peering.js
               exec /start.sh --log-format {{ .Values.datapower.env.defaultLogFormat }}
 {{- else }}
@@ -382,7 +410,15 @@ spec:
               mountPath: /drouter/temporary
 {{- if eq (.Values.datapower.env.enableTMS | default "off") "on" }}
             - name: tms
-              mountPath: /drouter/ramdisk2/mnt/raid-volume/raid0/local
+              mountPath: /drouter/ramdisk2/mnt/raid-volume/raid0
+{{- end }}
+{{- if .Values.datapower.additionalLocalTar }}
+            - name: drouter-local-volume
+              mountPath: /drouter/local
+{{- end }}
+{{- if .Values.datapower.additionalCerts }}
+            - name: drouter-certs-volume
+              mountPath: /root/secure/usrcerts
 {{- end }}
       volumes:
         - name: init-config-volume
@@ -424,6 +460,26 @@ spec:
         - name: root-secure-usrcerts-apiconnect-apim-volume
           secret:
             secretName: {{ .Values.datapower.apimVeloxCertsSecret }}
+{{- if .Values.datapower.additionalConfig }}
+        - name: init-additional-config-volume
+          configMap:
+            name: {{ template "dynamic-gateway-service.fullname" . }}-custom-config
+{{- end }}
+{{- if .Values.datapower.additionalLocalTar }}
+        - name: init-additional-local-volume
+          configMap:
+            name: {{ template "dynamic-gateway-service.fullname" . }}-local-files
+        - name: drouter-local-volume
+          emptyDir: {}
+{{- end }}
+{{- if .Values.datapower.additionalCerts }}
+{{- range .Values.datapower.additionalCerts }}
+        - name: {{ .secret }}-volume
+          secret:
+            secretName: {{ .secret }}
+{{- end }}
+        - name: drouter-certs-volume
+          emptyDir: {}
 {{- end }}
 {{- if eq (.Values.datapower.env.enableTMS | default "off") "on" }}
   volumeClaimTemplates:

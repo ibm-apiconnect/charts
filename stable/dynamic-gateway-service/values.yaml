@@ -120,6 +120,12 @@ datapower:
   snmpLocalAddress: 0.0.0.0
   snmpPort: 1161
   flexpointBundle:
+  loggingService:
+  - category: "apic-gw-service"
+    level: "info"
+  additionalConfig:
+  additionalLocalTar:
+  additionalCerts:
   storage:
     tmsPeering:
       accessModes:

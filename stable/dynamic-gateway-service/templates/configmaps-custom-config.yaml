@@ -1,0 +1,11 @@
+{{- if .Values.datapower.additionalConfig }}
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: {{ template "dynamic-gateway-service.fullname" . }}-custom-config
+data:
+{{- range .Values.datapower.additionalConfig }}
+  {{ .domain }}.cfg: |
+{{ $.Files.Get .configFile | indent 4 -}}
+{{- end }}
+{{- end }}
