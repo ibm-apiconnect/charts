@@ -372,6 +372,10 @@ spec:
               mountPath: /root/secure/usrcerts/apiconnect
             - name: root-secure-usrcerts-apiconnect-gwd-volume
               mountPath: /root/secure/usrcerts/apiconnect/gwd
+{{- if .Values.datapower.apimVeloxCertsSecret }}
+            - name: root-secure-usrcerts-apiconnect-apim-volume
+              mountPath: /root/secure/usrcerts/apiconnect/apim
+{{- end }}
             - name: drouter-ramdisk2-volume
               mountPath: /drouter/ramdisk2
             - name: drouter-temporary-volume
@@ -416,6 +420,11 @@ spec:
         - name: root-secure-usrcerts-apiconnect-gwd-volume
           secret:
             secretName: {{ .Values.datapower.apicGatewayServiceTLSSecret }}
+{{- if .Values.datapower.apimVeloxCertsSecret }}
+        - name: root-secure-usrcerts-apiconnect-apim-volume
+          secret:
+            secretName: {{ .Values.datapower.apimVeloxCertsSecret }}
+{{- end }}
 {{- if eq (.Values.datapower.env.enableTMS | default "off") "on" }}
   volumeClaimTemplates:
   - metadata:

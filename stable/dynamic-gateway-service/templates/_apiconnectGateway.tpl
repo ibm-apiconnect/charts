@@ -205,6 +205,24 @@ apiconnect.cfg: |
     idcred gwd_id_cred gwd_key gwd_cert ca gwd_ca
     exit
 
+{{- if .Values.datapower.apimVeloxCertsSecret }}
+    crypto
+    certificate apim_public_cert cert:///apim/apim_client_public.cert.pem
+    exit
+
+    crypto
+    certificate apim_ca cert:///apim/cacert.pem
+    exit
+
+    crypto
+    valcred apim_valcred
+      admin-state enabled
+      certificate apim_public_cert
+      certificate apim_ca
+    exit
+    exit
+{{- end}}
+
     crypto
     ssl-client gwd_client
       reset
@@ -245,7 +263,12 @@ apiconnect.cfg: |
       ciphers DHE_DSS_WITH_3DES_EDE_CBC_SHA
       ciphers RSA_WITH_3DES_EDE_CBC_SHA
       idcred gwd_id_cred
+{{- if .Values.datapower.apimVeloxCertsSecret }}
+      valcred apim_valcred
+      validate-server-cert
+{{ else }}
       no validate-server-cert
+{{- end }}
       caching
       cache-timeout 300
       cache-size 100
@@ -298,9 +321,16 @@ apiconnect.cfg: |
       ciphers DHE_DSS_WITH_3DES_EDE_CBC_SHA
       ciphers RSA_WITH_3DES_EDE_CBC_SHA
       idcred gwd_id_cred
+{{- if .Values.datapower.apimVeloxCertsSecret }}
+      valcred apim_valcred
+      request-client-auth
+      require-client-auth
+      validate-client-cert
+{{ else }}
       no request-client-auth
       no require-client-auth
       no validate-client-cert
+{{- end }}
       send-client-auth-ca-list
       caching on
       cache-timeout 300
