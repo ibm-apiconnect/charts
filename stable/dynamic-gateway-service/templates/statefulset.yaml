@@ -186,6 +186,7 @@ spec:
               set -x
               export $(env | grep ^DATAPOWER_ | cut -d= -f1)
               /root/node /start/gateway-peering.js
+              /root/node /start/syslog-tcp.js
               exec /start.sh --log-format {{ .Values.datapower.env.defaultLogFormat }}
 {{- else }}
               sh /start/dp-requirement-error.sh
@@ -242,6 +243,19 @@ spec:
             - name: APICONNECT_DEDICATED_SUBS_PEERING
               value: "off"
 {{- end }}
+            - name: "DATAPOWER_SYSLOG_TCP_STATE"
+{{/* Enforce valid values for syslogState as 'enabled' and 'disabled' (default: 'disabled') */}}
+{{- if eq (.Values.datapower.env.syslogState | default "disabled") "enabled" }}
+              value: "enabled"
+{{- else }}
+              value: "disabled"
+{{- end }}
+            - name: "DATAPOWER_SYSLOG_TCP_REMOTE_HOST"
+              value: {{ .Values.datapower.env.syslogRemoteHost | quote }}
+            - name: "DATAPOWER_SYSLOG_TCP_REMOTE_PORT"
+              value: {{ .Values.datapower.env.syslogRemotePort | quote }}
+            - name: "DATAPOWER_SYSLOG_TCP_TLS_SECRET"
+              value: {{ .Values.datapower.env.syslogTLSSecret | quote }}
             - name: GATEWAY_PEERING_MONITOR_PORT
               value: {{ .Values.datapower.gatewayPeeringMonitorPort | quote }}
             - name: GATEWAY_PEERING_LOCAL_PORT
@@ -372,6 +386,10 @@ spec:
               mountPath: /root/secure/usrcerts/apiconnect
             - name: root-secure-usrcerts-apiconnect-gwd-volume
               mountPath: /root/secure/usrcerts/apiconnect/gwd
+{{- if .Values.datapower.env.syslogTLSSecret }}
+            - name: root-secure-usrcerts-apiconnect-syslog-volume
+              mountPath: /root/secure/usrcerts/apiconnect/syslog
+{{- end }}
             - name: drouter-ramdisk2-volume
               mountPath: /drouter/ramdisk2
             - name: drouter-temporary-volume
@@ -416,6 +434,11 @@ spec:
         - name: root-secure-usrcerts-apiconnect-gwd-volume
           secret:
             secretName: {{ .Values.datapower.apicGatewayServiceTLSSecret }}
+{{- if .Values.datapower.env.syslogTLSSecret }}
+        - name: root-secure-usrcerts-apiconnect-syslog-volume
+          secret:
+            secretName: {{ .Values.datapower.env.syslogTLSSecret }}
+{{- end }}
 {{- if eq (.Values.datapower.env.enableTMS | default "off") "on" }}
   volumeClaimTemplates:
   - metadata:
