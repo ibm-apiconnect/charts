@@ -108,6 +108,15 @@ spec:
 {{- if .Values.datapower.adminUserSecret }}
               sh /init/scripts/init-admin-user.sh
 {{- end }}
+{{- if .Values.datapower.additionalConfig }}
+              sh /init/scripts/custom-config-handler.sh
+{{- end }}
+{{- if .Values.datapower.additionalLocalTar }}
+              sh /init/scripts/unpack-local-files.sh
+{{- end }}
+{{- if .Values.datapower.additionalCerts }}
+              sh /init/scripts/additional-cert-handler.sh
+{{- end }}
 {{- if .Values.datapower.customDatapowerConfig }}
               cat /init/custom-config/*.cfg > /drouter/config/apiconnect/custom-config.cfg
 {{- end }}
@@ -147,6 +156,24 @@ spec:
 {{- if .Values.datapower.customDatapowerConfig }}
             - name: init-custom-config-volume
               mountPath: /init/custom-config
+{{- end }}
+{{- if .Values.datapower.additionalConfig }}
+            - name: init-additional-config-volume
+              mountPath: /init/additional-config
+{{- end }}
+{{- if .Values.datapower.additionalLocalTar }}
+            - name: init-additional-local-volume
+              mountPath: /init/additional-local
+            - name: drouter-local-volume
+              mountPath: /drouter/local
+{{- end }}
+{{- if .Values.datapower.additionalCerts }}
+            - name: drouter-certs-volume
+              mountPath: /root/secure/usrcerts
+{{- range .Values.datapower.additionalCerts }}
+            - name: {{ .secret }}-volume
+              mountPath: /init/certs/{{ .domain }}/{{ .secret }}
+{{- end }}
 {{- end }}
 {{- else }}
 {{/* No initContainer if requirements are not satisfied */}}
@@ -380,6 +407,14 @@ spec:
             - name: tms
               mountPath: /drouter/ramdisk2/mnt/raid-volume/raid0/local
 {{- end }}
+{{- if .Values.datapower.additionalLocalTar }}
+            - name: drouter-local-volume
+              mountPath: /drouter/local
+{{- end }}
+{{- if .Values.datapower.additionalCerts }}
+            - name: drouter-certs-volume
+              mountPath: /root/secure/usrcerts
+{{- end }}
       volumes:
         - name: init-config-volume
           configMap:
@@ -416,6 +451,27 @@ spec:
         - name: root-secure-usrcerts-apiconnect-gwd-volume
           secret:
             secretName: {{ .Values.datapower.apicGatewayServiceTLSSecret }}
+{{- if .Values.datapower.additionalConfig }}
+        - name: init-additional-config-volume
+          configMap:
+            name: {{ template "dynamic-gateway-service.fullname" . }}-custom-config
+{{- end }}
+{{- if .Values.datapower.additionalLocalTar }}
+        - name: init-additional-local-volume
+          configMap:
+            name: {{ template "dynamic-gateway-service.fullname" . }}-local-files
+        - name: drouter-local-volume
+          emptyDir: {}
+{{- end }}
+{{- if .Values.datapower.additionalCerts }}
+{{- range .Values.datapower.additionalCerts }}
+        - name: {{ .secret }}-volume
+          secret:
+            secretName: {{ .secret }}
+{{- end }}
+        - name: drouter-certs-volume
+          emptyDir: {}
+{{- end }}
 {{- if eq (.Values.datapower.env.enableTMS | default "off") "on" }}
   volumeClaimTemplates:
   - metadata:

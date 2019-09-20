@@ -119,6 +119,9 @@ datapower:
   snmpLocalAddress: 0.0.0.0
   snmpPort: 1161
   flexpointBundle:
+  additionalConfig:
+  additionalLocalTar:
+  additionalCerts:
   storage:
     tmsPeering:
       accessModes:
