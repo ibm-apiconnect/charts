@@ -5,5 +5,7 @@ metadata:
 data:
   gateway-peering.js: |
 {{ .Files.Get "static/gateway-peering.js" | indent 4 }}
+  migrate-tms-pv.sh: |
+{{ .Files.Get "static/migrate-tms-pv.sh" | indent 4 -}}
   dp-requirement-error.sh: |
 {{ .Files.Get "static/dp-requirement-error.sh" | indent 4 -}}
