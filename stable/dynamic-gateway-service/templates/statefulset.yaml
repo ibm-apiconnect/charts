@@ -445,7 +445,7 @@ spec:
         - name: root-secure-usrcerts-apiconnect-syslog-volume
           secret:
             secretName: {{ .Values.datapower.env.syslogTLSSecret }}
-{{- end }}<F8><F8><F8><F8><F8><F8><F8><F8><F8><F8><F8><F8><F8><F8><F8><F8><F8><F8><F8><F8><F8><F8><F8><F8>
+{{- end }}
 {{- if .Values.datapower.apimVeloxCertsSecret }}
         - name: root-secure-usrcerts-apiconnect-apim-volume
           secret:
