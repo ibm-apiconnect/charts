@@ -10,16 +10,19 @@
 #
 ###############################################################################
 
+# Copy current directory
+return_dir="$(pwd)"
 
 # Create extraction directory
-mkdir local-extract
-cd local-extract
+mkdir /opt/ibm/datapower/init/local-extract
+cd /opt/ibm/datapower/init/local-extract
 
 # Decode tar
-base64 -d /init/additional-local/* > local.tar
+base64 -d /opt/ibm/datapower/init/additional-local/* > local.tar
 
 # extract
 tar xf local.tar
+rm local.tar
 
 # If top level is local, move into local
 if ls | grep -q 'local/'
@@ -29,3 +32,5 @@ fi
 
 # Copy all files over to local path
 cp -r * /drouter/local/
+
+cd $return_dir

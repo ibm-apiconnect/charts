@@ -13,10 +13,10 @@
 
 
 # Loop over all files in /init/additional-config/
-for configfile in /init/additional-config/*
+for configfile in /opt/ibm/datapower/init/additional-config/*
 do
   # Get domain name by stripping path and extension
-  domain="$(echo $configfile | sed -e 's|/init/additional-config/||g' -e 's|.cfg||g')"
+  domain="$(echo $configfile | sed -e 's|/opt/ibm/datapower/init/additional-config/||g' -e 's|.cfg||g')"
 
   # Check for default domain, which is a special case
   if [ "$domain" == "default" ]

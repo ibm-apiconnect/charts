@@ -7,7 +7,7 @@
 #
 ###############################################################################
 
-INITCERTS="/init/certs"
+INITCERTS="/opt/ibm/datapower/init/certs"
 
 for domain in $(ls $INITCERTS)
 do

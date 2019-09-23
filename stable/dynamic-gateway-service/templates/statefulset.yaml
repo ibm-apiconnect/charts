@@ -349,6 +349,8 @@ spec:
             periodSeconds: 10
             failureThreshold: 3
           volumeMounts:
+            - name: init-volume
+              mountPath: /opt/ibm/datapower/init
             - name: init-config-volume
               mountPath: /opt/ibm/datapower/init/config
             - name: init-config-apiconnect-volume
@@ -406,6 +408,8 @@ spec:
               mountPath: /opt/ibm/datapower/init/additional-config
 {{- end }}
       volumes:
+        - name: init-volume
+          emptyDir: {}
         - name: init-config-volume
           configMap:
             name: {{ template "dynamic-gateway-service.fullname" . }}-init-config
