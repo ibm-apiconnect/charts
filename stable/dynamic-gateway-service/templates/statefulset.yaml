@@ -374,6 +374,7 @@ spec:
 {{- if .Values.datapower.env.syslogTLSSecret }}
             - name: root-secure-usrcerts-apiconnect-syslog-volume
               mountPath: /root/secure/usrcerts/apiconnect/syslog
+{{- end }}
 {{- if .Values.datapower.apimVeloxCertsSecret }}
             - name: root-secure-usrcerts-apiconnect-apim-volume
               mountPath: /root/secure/usrcerts/apiconnect/apim
@@ -444,6 +445,7 @@ spec:
         - name: root-secure-usrcerts-apiconnect-syslog-volume
           secret:
             secretName: {{ .Values.datapower.env.syslogTLSSecret }}
+{{- end }}<F8><F8><F8><F8><F8><F8><F8><F8><F8><F8><F8><F8><F8><F8><F8><F8><F8><F8><F8><F8><F8><F8><F8><F8>
 {{- if .Values.datapower.apimVeloxCertsSecret }}
         - name: root-secure-usrcerts-apiconnect-apim-volume
           secret:
