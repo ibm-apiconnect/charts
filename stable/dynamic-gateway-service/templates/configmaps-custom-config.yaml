@@ -6,6 +6,6 @@ metadata:
 data:
 {{- range .Values.datapower.additionalConfig }}
   {{ .domain }}.cfg: |
-{{ $.Files.Get .configFile | indent 4 -}}
+{{ $.Files.Get .config | indent 4 -}}
 {{- end }}
 {{- end }}
