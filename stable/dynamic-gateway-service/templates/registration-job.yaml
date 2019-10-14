@@ -48,6 +48,10 @@ spec:
               value: {{ template "icp4i-od.manager.registration-host" . }}
             - name: OD4ICI_REGISTRATION_PORT
               value: "8090"
+          securityContext:
+            capabilities:
+              drop:
+              - ALL
       restartPolicy: Never
   backoffLimit: 10
 {{ end }}

@@ -107,6 +107,10 @@ spec:
         resources:
 {{ toYaml .Values.datapowerMonitor.resources | indent 10 }}
 {{- if .Values.datapower.adminUserSecret }}
+        securityContext:
+          capabilities:
+            drop:
+            - ALL
         volumeMounts:
           - name: admin-user-password
             mountPath: /usr/share/admin-password
