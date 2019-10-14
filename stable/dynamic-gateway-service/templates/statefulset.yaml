@@ -123,6 +123,10 @@ spec:
 {{- end }}
               find /drouter/ramdisk2/mnt -type d -exec chmod 0777 {} \;
 {{- end }}
+          securityContext:
+            capabilities:
+              drop:
+              - ALL
           volumeMounts:
             - name: init-config-volume
               mountPath: /init/config
@@ -435,6 +439,10 @@ spec:
             requests:
               cpu: 256m
               memory: 128Mi
+          securityContext:
+            capabilities:
+              drop:
+              - ALL
           readinessProbe:
             httpGet:
               path: /?service=health
@@ -501,6 +509,10 @@ spec:
               value: "9411"
             - name: COLLECTOR_GRPC_TLS
               value: "false"
+          securityContext:
+            capabilities:
+              drop:
+              - ALL
           resources:
             limits:
               cpu: 500m
