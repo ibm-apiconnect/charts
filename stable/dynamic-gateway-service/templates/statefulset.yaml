@@ -121,6 +121,8 @@ spec:
             - |
               sh /opt/ibm/datapower/init/scripts/init-dpm-check.sh
               cp -RL /opt/ibm/datapower/init/config/* /drouter/config
+              mkdir -p /root/secure/usrcerts/apiconnect/gwd
+              cp -RL /opt/ibm/datapower/init/apiconnect-gwd/* /root/secure/usrcerts/apiconnect/gwd/
 {{- if .Values.datapower.adminUserSecret }}
               sh /opt/ibm/datapower/init/scripts/init-admin-user.sh
 {{- end }}
@@ -138,9 +140,9 @@ spec:
 {{- end }}
 {{/* If SSH is enabled, DP runs as root. Only chown if SSH is not enabled */}}
 {{- if ne .Values.datapower.gatewaySshState "enabled" }}
-              chown -R 101:101 /drouter/config /root/secure/usrcerts/apiconnect
+              chown -R 101:101 /drouter/config/* /root/secure/usrcerts/apiconnect
 {{- end }}
-              chmod -R 0777 /drouter/config /root/secure/usrcerts/apiconnect
+              chmod -R 0777 /drouter/config/* /root/secure/usrcerts/apiconnect
 {{- if eq (.Values.datapower.env.enableTMS | default "off") "on" }}
 {{/* If SSH is enabled, DP runs as root. Only chown if SSH is not enabled */}}
 {{- if ne .Values.datapower.gatewaySshState "enabled" }}
@@ -357,6 +359,10 @@ spec:
               mountPath: /opt/ibm/datapower/init/config/apiconnect
             - name: init-scripts-volume
               mountPath: /opt/ibm/datapower/init/scripts
+            - name: init-certs-volume
+              mountPath: /opt/ibm/datapower/init/apiconnect-gwd
+            - name: root-secure-usrcerts-volume
+              mountPath: /root/secure/usrcerts
 {{- if .Values.datapower.adminUserSecret }}
             - name: init-admin-user-secret
               mountPath: /opt/ibm/datapower/init/admin-user-secret
@@ -369,10 +375,6 @@ spec:
               mountPath: /start
             - name: drouter-config-volume
               mountPath: /drouter/config
-            - name: root-secure-usrcerts-apiconnect-volume
-              mountPath: /root/secure/usrcerts/apiconnect
-            - name: root-secure-usrcerts-apiconnect-gwd-volume
-              mountPath: /root/secure/usrcerts/apiconnect/gwd
 {{- if .Values.datapower.env.syslogTLSSecret }}
             - name: root-secure-usrcerts-apiconnect-syslog-volume
               mountPath: /root/secure/usrcerts/apiconnect/syslog
@@ -396,8 +398,6 @@ spec:
               mountPath: /drouter/local
 {{- end }}
 {{- if .Values.datapower.additionalCerts }}
-            - name: drouter-certs-volume
-              mountPath: /root/secure/usrcerts
 {{- range .Values.datapower.additionalCerts }}
             - name: {{ .secret }}-volume
               mountPath: /opt/ibm/datapower/init/certs/{{ .domain }}/{{ .secret }}
@@ -419,6 +419,9 @@ spec:
         - name: init-scripts-volume
           configMap:
             name: {{ template "dynamic-gateway-service.fullname" . }}-static-init-scripts
+        - name: init-certs-volume
+          secret:
+            secretName: {{ .Values.datapower.apicGatewayServiceTLSSecret }}
 {{- if .Values.datapower.adminUserSecret }}
         - name: init-admin-user-secret
           secret:
@@ -434,17 +437,14 @@ spec:
             name: {{ template "dynamic-gateway-service.fullname" . }}-static-start-scripts
         - name: drouter-config-volume
           emptyDir: {}
-        - name: root-secure-usrcerts-apiconnect-volume
-          emptyDir: {}
         - name: drouter-ramdisk2-volume
           emptyDir:
             medium: ""
         - name: drouter-temporary-volume
           emptyDir:
             medium: ""
-        - name: root-secure-usrcerts-apiconnect-gwd-volume
-          secret:
-            secretName: {{ .Values.datapower.apicGatewayServiceTLSSecret }}
+        - name: root-secure-usrcerts-volume
+          emptyDir: {}
 {{- if .Values.datapower.env.syslogTLSSecret }}
         - name: root-secure-usrcerts-apiconnect-syslog-volume
           secret:
@@ -473,8 +473,6 @@ spec:
           secret:
             secretName: {{ .secret }}
 {{- end }}
-        - name: drouter-certs-volume
-          emptyDir: {}
 {{- end }}
 {{- if eq (.Values.datapower.env.enableTMS | default "off") "on" }}
   volumeClaimTemplates:
