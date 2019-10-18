@@ -152,6 +152,9 @@ spec:
 {{- if .Values.datapower.additionalCerts }}
               sh /opt/ibm/datapower/init/scripts/additional-cert-handler.sh
 {{- end }}
+{{- if .Values.datapower.apimVeloxCertsSecret }}
+              sh /opt/ibm/datapower/init/scripts/apim-certs-handler.sh
+{{- end }}
 {{- if .Values.datapower.customDatapowerConfig }}
               cat /opt/ibm/datapower/init/custom-config/*.cfg > /drouter/config/apiconnect/custom-config.cfg
 {{- end }}
@@ -401,8 +404,8 @@ spec:
               mountPath: /root/secure/usrcerts/apiconnect/syslog
 {{- end }}
 {{- if .Values.datapower.apimVeloxCertsSecret }}
-            - name: root-secure-usrcerts-apiconnect-apim-volume
-              mountPath: /root/secure/usrcerts/apiconnect/apim
+            - name: init-apim-certs-volume
+              mountPath: /opt/ibm/datapower/init/apim-certs
 {{- end }}
             - name: drouter-ramdisk2-volume
               mountPath: /drouter/ramdisk2
@@ -623,7 +626,7 @@ spec:
             secretName: {{ .Values.datapower.env.syslogTLSSecret }}
 {{- end }}
 {{- if .Values.datapower.apimVeloxCertsSecret }}
-        - name: root-secure-usrcerts-apiconnect-apim-volume
+        - name: init-apim-certs-volume
           secret:
             secretName: {{ .Values.datapower.apimVeloxCertsSecret }}
 {{- end }}

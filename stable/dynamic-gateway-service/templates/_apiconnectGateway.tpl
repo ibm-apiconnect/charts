@@ -210,21 +210,17 @@ apiconnect.cfg: |
     exit
 
 {{- if .Values.datapower.apimVeloxCertsSecret }}
-    crypto
-    certificate apim_public_cert cert:///apim/apim_client_public.cert.pem
+    %if% available "include-config"
+
+    include-config "apim-valcred-cfg"
+      config-url "config:///apim-valcred.cfg"
+      auto-execute
+      no interface-detection
     exit
 
-    crypto
-    certificate apim_ca cert:///apim/cacert.pem
-    exit
+    exec "config:///apim-valcred.cfg"
 
-    crypto
-    valcred apim_valcred
-      admin-state enabled
-      certificate apim_public_cert
-      certificate apim_ca
-    exit
-    exit
+    %endif%
 {{- end}}
 
     crypto
