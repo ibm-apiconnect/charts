@@ -8,6 +8,6 @@ data:
   syslog-tcp.js: |
 {{ .Files.Get "static/syslog-tcp.js" | indent 4 }}
   migrate-tms-pv.sh: |
-{{ .Files.Get "static/migrate-tms-pv.sh" | indent 4 -}}
+{{ .Files.Get "static/migrate-tms-pv.sh" | indent 4 }}
   dp-requirement-error.sh: |
 {{ .Files.Get "static/dp-requirement-error.sh" | indent 4 -}}
