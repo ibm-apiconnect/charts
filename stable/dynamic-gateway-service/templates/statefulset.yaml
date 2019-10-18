@@ -72,8 +72,15 @@ spec:
       hostPID: false
       hostIPC: false
       securityContext:
+{{- if eq .Values.datapower.gatewaySshState "enabled" }}
         runAsNonRoot: false
         runAsUser: 0
+        fsGroup: 0
+{{- else }}
+        runAsNonRoot: true
+        runAsUser: 101
+        fsGroup: 101
+{{- end }}
       affinity:
 {{- if .Values.affinity }}
 {{ toYaml .Values.affinity | indent 8 }}
@@ -100,9 +107,11 @@ spec:
 {{- if eq .Values.datapower.gatewaySshState "enabled" }}
             runAsNonRoot: false
             runAsUser: 0
+            fsGroup: 0
 {{- else }}
             runAsNonRoot: true
             runAsUser: 101
+            fsGroup: 101
 {{- end }}
             capabilities:
               drop:
@@ -143,13 +152,6 @@ spec:
               chown -R 101:101 /drouter/config/* /root/secure/usrcerts/apiconnect
 {{- end }}
               chmod -R 0777 /drouter/config/* /root/secure/usrcerts/apiconnect
-{{- if eq (.Values.datapower.env.enableTMS | default "off") "on" }}
-{{/* If SSH is enabled, DP runs as root. Only chown if SSH is not enabled */}}
-{{- if ne .Values.datapower.gatewaySshState "enabled" }}
-              find /drouter/ramdisk2/mnt -type d -exec chown 101:101 {} \;
-{{- end }}
-              find /drouter/ramdisk2/mnt -type d -exec chmod 0777 {} \;
-{{- end }}
 {{- if eq (include "datapower-requirements.satisfied" .) "true"}}
               set -x
               export $(env | grep ^DATAPOWER_ | cut -d= -f1)
@@ -385,6 +387,10 @@ spec:
 {{- end }}
             - name: drouter-ramdisk2-volume
               mountPath: /drouter/ramdisk2
+            - name: drouter-ramdisk2-mnt-volume
+              mountPath: /drouter/ramdisk2/mnt
+            - name: drouter-ramdisk2-mnt-raid-volume
+              mountPath: /drouter/ramdisk2/mnt/raid-volume
             - name: drouter-temporary-volume
               mountPath: /drouter/temporary
 {{- if eq (.Values.datapower.env.enableTMS | default "off") "on" }}
@@ -438,6 +444,12 @@ spec:
         - name: drouter-config-volume
           emptyDir: {}
         - name: drouter-ramdisk2-volume
+          emptyDir:
+            medium: ""
+        - name: drouter-ramdisk2-mnt-volume
+          emptyDir:
+            medium: ""
+        - name: drouter-ramdisk2-mnt-raid-volume
           emptyDir:
             medium: ""
         - name: drouter-temporary-volume
