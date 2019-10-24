@@ -72,8 +72,15 @@ spec:
       hostPID: false
       hostIPC: false
       securityContext:
+{{- if eq .Values.datapower.gatewaySshState "enabled" }}
         runAsNonRoot: false
         runAsUser: 0
+        fsGroup: 0
+{{- else }}
+        runAsNonRoot: true
+        runAsUser: 101
+        fsGroup: 101
+{{- end }}
       affinity:
 {{- if .Values.affinity }}
 {{ toYaml .Values.affinity | indent 8 }}
@@ -88,73 +95,6 @@ spec:
                   app: {{ template "dynamic-gateway-service.name" . }}
                   release: {{ .Release.Name }}
 {{- end }}
-{{/* Define the initContainer only if the requirements are satisfied */}}
-{{- if eq (include "datapower-requirements.satisfied" .) "true"}}
-      initContainers:
-        - name: dpinit
-          image: "{{ .Values.datapower.busybox.repository }}:{{ .Values.datapower.busybox.tag }}"
-          imagePullPolicy: {{ .Values.datapower.busybox.pullPolicy }} 
-          env:
-            - name: DPM_FQDN
-              value: "{{ .Release.Name }}-dpm-svc.{{ .Release.Namespace }}.svc.cluster.local"
-            - name: DPM_LIVENESS_PORT
-              value: {{ .Values.datapowerMonitor.livenessPort | default 8080 | quote }}
-          command:
-            - sh
-            - -c
-            - |
-              sh /init/scripts/init-dpm-check.sh
-              cp -RL /init/config/* /drouter/config
-{{- if .Values.datapower.adminUserSecret }}
-              sh /init/scripts/init-admin-user.sh
-{{- end }}
-{{- if .Values.datapower.customDatapowerConfig }}
-              cat /init/custom-config/*.cfg > /drouter/config/apiconnect/custom-config.cfg
-{{- end }}
-{{/* If SSH is enabled, DP runs as root. Only chown if SSH is not enabled */}}
-{{- if ne .Values.datapower.gatewaySshState "enabled" }}
-              chown -R 101:101 /drouter/config /root/secure/usrcerts/apiconnect
-{{- end }}
-              chmod -R 0777 /drouter/config /root/secure/usrcerts/apiconnect
-{{- if eq (.Values.datapower.env.enableTMS | default "off") "on" }}
-{{/* If SSH is enabled, DP runs as root. Only chown if SSH is not enabled */}}
-{{- if ne .Values.datapower.gatewaySshState "enabled" }}
-              find /drouter/ramdisk2/mnt -type d -exec chown 101:101 {} \;
-{{- end }}
-              find /drouter/ramdisk2/mnt -type d -exec chmod 0777 {} \;
-{{- end }}
-          securityContext:
-            capabilities:
-              drop:
-              - ALL
-          volumeMounts:
-            - name: init-config-volume
-              mountPath: /init/config
-            - name: init-config-apiconnect-volume
-              mountPath: /init/config/apiconnect
-            - name: init-scripts-volume
-              mountPath: /init/scripts
-            - name: drouter-config-volume
-              mountPath: /drouter/config
-            - name: root-secure-usrcerts-apiconnect-volume
-              mountPath: /root/secure/usrcerts/apiconnect
-            - name: drouter-ramdisk2-volume
-              mountPath: /drouter/ramdisk2
-{{- if eq (.Values.datapower.env.enableTMS | default "off") "on" }}
-            - name: tms
-              mountPath: /drouter/ramdisk2/mnt/raid-volume/raid0/local
-{{- end }}
-{{- if .Values.datapower.adminUserSecret }}
-            - name: init-admin-user-secret
-              mountPath: /init/admin-user-secret
-{{- end }}
-{{- if .Values.datapower.customDatapowerConfig }}
-            - name: init-custom-config-volume
-              mountPath: /init/custom-config
-{{- end }}
-{{- else }}
-{{/* No initContainer if requirements are not satisfied */}}
-{{- end }}
       containers:
         - name: {{ .Chart.Name }}
           image: "{{ .Values.datapower.image.repository }}:{{ .Values.datapower.image.tag }}"
@@ -167,9 +107,11 @@ spec:
 {{- if eq .Values.datapower.gatewaySshState "enabled" }}
             runAsNonRoot: false
             runAsUser: 0
+            fsGroup: 0
 {{- else }}
             runAsNonRoot: true
             runAsUser: 101
+            fsGroup: 101
 {{- end }}
             capabilities:
               drop:
@@ -186,10 +128,36 @@ spec:
             - sh
             - -c
             - |
+              sh /opt/ibm/datapower/init/scripts/init-dpm-check.sh
+              cp -RL /opt/ibm/datapower/init/config/* /drouter/config
+              mkdir -p /root/secure/usrcerts/apiconnect/gwd
+              cp -RL /opt/ibm/datapower/init/apiconnect-gwd/* /root/secure/usrcerts/apiconnect/gwd/
+{{- if .Values.datapower.adminUserSecret }}
+              sh /opt/ibm/datapower/init/scripts/init-admin-user.sh
+{{- end }}
+{{- if .Values.datapower.additionalConfig }}
+              sh /opt/ibm/datapower/init/scripts/custom-config-handler.sh
+{{- end }}
+{{- if .Values.datapower.additionalLocalTar }}
+              sh /opt/ibm/datapower/init/scripts/unpack-local-files.sh
+{{- end }}
+{{- if .Values.datapower.additionalCerts }}
+              sh /opt/ibm/datapower/init/scripts/additional-cert-handler.sh
+{{- end }}
+{{- if .Values.datapower.customDatapowerConfig }}
+              cat /opt/ibm/datapower/init/custom-config/*.cfg > /drouter/config/apiconnect/custom-config.cfg
+{{- end }}
+{{/* If SSH is enabled, DP runs as root. Only chown if SSH is not enabled */}}
+{{- if ne .Values.datapower.gatewaySshState "enabled" }}
+              chown -R 101:101 /drouter/config/* /root/secure/usrcerts/apiconnect
+{{- end }}
+              chmod -R 0777 /drouter/config/* /root/secure/usrcerts/apiconnect
 {{- if eq (include "datapower-requirements.satisfied" .) "true"}}
               set -x
               export $(env | grep ^DATAPOWER_ | cut -d= -f1)
+              sh /start/migrate-tms-pv.sh
               /root/node /start/gateway-peering.js
+              /root/node /start/syslog-tcp.js
               exec /start.sh --log-format {{ .Values.datapower.env.defaultLogFormat }}
 {{- else }}
               sh /start/dp-requirement-error.sh
@@ -198,6 +166,10 @@ spec:
           stdin: true
           tty: true
           env:
+            - name: DPM_FQDN
+              value: "{{ .Release.Name }}-dpm-svc.{{ .Release.Namespace }}.svc.cluster.local"
+            - name: DPM_LIVENESS_PORT
+              value: {{ .Values.datapowerMonitor.livenessPort | default 8080 | quote }}
 {{- if eq (include "datapower-requirements.satisfied" .) "false"}}
             - name: DP_REQ_VALID_LICENSE_VERSION
               value: "{{ template "datapower-requirements.validLicenseVersion" . }}"
@@ -246,6 +218,19 @@ spec:
             - name: APICONNECT_DEDICATED_SUBS_PEERING
               value: "off"
 {{- end }}
+            - name: "DATAPOWER_SYSLOG_TCP_STATE"
+{{/* Enforce valid values for syslogState as 'enabled' and 'disabled' (default: 'disabled') */}}
+{{- if eq (.Values.datapower.env.syslogState | default "disabled") "enabled" }}
+              value: "enabled"
+{{- else }}
+              value: "disabled"
+{{- end }}
+            - name: "DATAPOWER_SYSLOG_TCP_REMOTE_HOST"
+              value: {{ .Values.datapower.env.syslogRemoteHost | quote }}
+            - name: "DATAPOWER_SYSLOG_TCP_REMOTE_PORT"
+              value: {{ .Values.datapower.env.syslogRemotePort | quote }}
+            - name: "DATAPOWER_SYSLOG_TCP_TLS_SECRET"
+              value: {{ .Values.datapower.env.syslogTLSSecret | quote }}
             - name: GATEWAY_PEERING_MONITOR_PORT
               value: {{ .Values.datapower.gatewayPeeringMonitorPort | quote }}
             - name: GATEWAY_PEERING_LOCAL_PORT
@@ -379,21 +364,65 @@ spec:
             periodSeconds: 10
             failureThreshold: 3
           volumeMounts:
+            - name: init-volume
+              mountPath: /opt/ibm/datapower/init
+            - name: init-config-volume
+              mountPath: /opt/ibm/datapower/init/config
+            - name: init-config-apiconnect-volume
+              mountPath: /opt/ibm/datapower/init/config/apiconnect
+            - name: init-scripts-volume
+              mountPath: /opt/ibm/datapower/init/scripts
+            - name: init-certs-volume
+              mountPath: /opt/ibm/datapower/init/apiconnect-gwd
+            - name: root-secure-usrcerts-volume
+              mountPath: /root/secure/usrcerts
+{{- if .Values.datapower.adminUserSecret }}
+            - name: init-admin-user-secret
+              mountPath: /opt/ibm/datapower/init/admin-user-secret
+{{- end }}
+{{- if .Values.datapower.customDatapowerConfig }}
+            - name: init-custom-config-volume
+              mountPath: /opt/ibm/datapower/init/custom-config
+{{- end }}
             - name: start-volume
               mountPath: /start
             - name: drouter-config-volume
               mountPath: /drouter/config
-            - name: root-secure-usrcerts-apiconnect-volume
-              mountPath: /root/secure/usrcerts/apiconnect
-            - name: root-secure-usrcerts-apiconnect-gwd-volume
-              mountPath: /root/secure/usrcerts/apiconnect/gwd
+{{- if .Values.datapower.env.syslogTLSSecret }}
+            - name: root-secure-usrcerts-apiconnect-syslog-volume
+              mountPath: /root/secure/usrcerts/apiconnect/syslog
+{{- end }}
+{{- if .Values.datapower.apimVeloxCertsSecret }}
+            - name: root-secure-usrcerts-apiconnect-apim-volume
+              mountPath: /root/secure/usrcerts/apiconnect/apim
+{{- end }}
             - name: drouter-ramdisk2-volume
               mountPath: /drouter/ramdisk2
+            - name: drouter-ramdisk2-mnt-volume
+              mountPath: /drouter/ramdisk2/mnt
+            - name: drouter-ramdisk2-mnt-raid-volume
+              mountPath: /drouter/ramdisk2/mnt/raid-volume
             - name: drouter-temporary-volume
               mountPath: /drouter/temporary
 {{- if eq (.Values.datapower.env.enableTMS | default "off") "on" }}
             - name: tms
-              mountPath: /drouter/ramdisk2/mnt/raid-volume/raid0/local
+              mountPath: /drouter/ramdisk2/mnt/raid-volume/raid0
+{{- end }}
+{{- if .Values.datapower.additionalLocalTar }}
+            - name: init-additional-local-volume
+              mountPath: /opt/ibm/datapower/init/additional-local
+            - name: drouter-local-volume
+              mountPath: /drouter/local
+{{- end }}
+{{- if .Values.datapower.additionalCerts }}
+{{- range .Values.datapower.additionalCerts }}
+            - name: {{ .secret }}-volume
+              mountPath: /opt/ibm/datapower/init/certs/{{ .domain }}/{{ .secret }}
+{{- end }}
+{{- end }}
+{{- if .Values.datapower.additionalConfig }}
+            - name: init-additional-config-volume
+              mountPath: /opt/ibm/datapower/init/additional-config
 {{- end }}
 {{- if eq (.Values.odTracing.enabled | default "false") "true" }}
             - name: icp4i-od-jaeger-client
@@ -537,6 +566,8 @@ spec:
             failureThreshold: {{ .Values.odTracing.collector.livenessProbe.failureThreshold }}
 {{- end }}
       volumes:
+        - name: init-volume
+          emptyDir: {}
         - name: init-config-volume
           configMap:
             name: {{ template "dynamic-gateway-service.fullname" . }}-init-config
@@ -546,6 +577,9 @@ spec:
         - name: init-scripts-volume
           configMap:
             name: {{ template "dynamic-gateway-service.fullname" . }}-static-init-scripts
+        - name: init-certs-volume
+          secret:
+            secretName: {{ .Values.datapower.apicGatewayServiceTLSSecret }}
 {{- if .Values.datapower.adminUserSecret }}
         - name: init-admin-user-secret
           secret:
@@ -561,17 +595,49 @@ spec:
             name: {{ template "dynamic-gateway-service.fullname" . }}-static-start-scripts
         - name: drouter-config-volume
           emptyDir: {}
-        - name: root-secure-usrcerts-apiconnect-volume
-          emptyDir: {}
         - name: drouter-ramdisk2-volume
+          emptyDir:
+            medium: ""
+        - name: drouter-ramdisk2-mnt-volume
+          emptyDir:
+            medium: ""
+        - name: drouter-ramdisk2-mnt-raid-volume
           emptyDir:
             medium: ""
         - name: drouter-temporary-volume
           emptyDir:
             medium: ""
-        - name: root-secure-usrcerts-apiconnect-gwd-volume
+        - name: root-secure-usrcerts-volume
+          emptyDir: {}
+{{- if .Values.datapower.env.syslogTLSSecret }}
+        - name: root-secure-usrcerts-apiconnect-syslog-volume
           secret:
-            secretName: {{ .Values.datapower.apicGatewayServiceTLSSecret }}
+            secretName: {{ .Values.datapower.env.syslogTLSSecret }}
+{{- end }}
+{{- if .Values.datapower.apimVeloxCertsSecret }}
+        - name: root-secure-usrcerts-apiconnect-apim-volume
+          secret:
+            secretName: {{ .Values.datapower.apimVeloxCertsSecret }}
+{{- end }}
+{{- if .Values.datapower.additionalConfig }}
+        - name: init-additional-config-volume
+          configMap:
+            name: {{ template "dynamic-gateway-service.fullname" . }}-custom-config
+{{- end }}
+{{- if .Values.datapower.additionalLocalTar }}
+        - name: init-additional-local-volume
+          configMap:
+            name: {{ template "dynamic-gateway-service.fullname" . }}-local-files
+        - name: drouter-local-volume
+          emptyDir: {}
+{{- end }}
+{{- if .Values.datapower.additionalCerts }}
+{{- range .Values.datapower.additionalCerts }}
+        - name: {{ .secret }}-volume
+          secret:
+            secretName: {{ .secret }}
+{{- end }}
+{{- end }}
 {{- if eq ( .Values.odTracing.enabled | default "false" ) "true" }}
         - name: icp4i-od-ca-certificate
           secret:
@@ -581,7 +647,6 @@ spec:
           configMap:
             name: {{ template "dynamic-gateway-service.fullname" . }}-static-jaeger-client
 {{- end }}
-
 {{- if eq (.Values.datapower.env.enableTMS | default "off") "on" }}
   volumeClaimTemplates:
   - metadata:
