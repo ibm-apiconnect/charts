@@ -62,10 +62,15 @@ spec:
         app: {{ template "dynamic-gateway-service.name" . }}
         release: {{ .Release.Name }}
     spec:
-      {{- if .Values.datapower.image.pullSecrets }}
+      {{- if (or .Values.datapower.image.pullSecrets .Values.datapower.image.entitledRegistrySecret) }}
       imagePullSecrets:
+      {{- if .Values.datapower.image.pullSecrets }}
       {{- range .Values.datapower.image.pullSecrets }}
       - name: {{ .name }}
+      {{- end }}
+      {{- end }}
+      {{- if .Values.datapower.image.entitledRegistrySecret }}
+      - name: {{ .Values.datapower.image.entitledRegistrySecret }}
       {{- end }}
       {{- end }}
       hostNetwork: false
