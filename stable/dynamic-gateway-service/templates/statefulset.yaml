@@ -28,35 +28,29 @@ spec:
         prometheus.io/target: '127.0.0.1:{{ .Values.datapower.snmpPort }}'
         prometheus.io/module: 'dpStatusMIB'
 {{- $licenseVersion := quote .Values.datapower.licenseVersion -}}
-{{- if .Values.cip }}
-  {{- if eq (include "datapower-requirements.validLicenseVersion" .) "true" }}
-        productVersion: "{{ .Values.datapower.image.tag }}"
-    {{- if eq $licenseVersion ("Production" | quote) }}
-        productID: 'DPGateway_5737_I89_ICIP_chargeable'
-        productName: 'IBM Cloud Integration Platform - DataPower Gateway (Chargeable)'
-    {{- else if eq $licenseVersion ("Nonproduction" | quote) }}
-        productID: 'DPGateway_5737_I89_ICIP_nonProd_chargeable'
-        productName: 'IBM Cloud Integration Platform (non-production) - DataPower Gateway (Chargeable)'
-    {{- else }}
-        productID: 'IBMDataPowerGatewayVirtualEdition_{{ .image.tag }}_Developers'
-    {{- end }}
-  {{- end }}
-{{- else }}
   {{- if eq (include "datapower-requirements.validLicenseVersion" .) "true" }}
         productFlexpointBundle: "{{ .Values.datapower.flexpointBundle }}"
-        productMetric: "PROCESSOR_VALUE_UNIT"
+        productMetric: "VIRTUAL_PROCESSOR_CORE"
         productVersion: "{{ .Values.datapower.image.tag }}"
     {{- if eq $licenseVersion ("Production" | quote) }}
+        productName: 'IBM DataPower Gateway Virtual Edition for Production'
         productID: '887a7b80dd7b40c9b978ff085230604e'
-        productChargedContainers: "all"
+        productChargedContainers: "{{ .Chart.Name }}"
     {{- else if eq $licenseVersion ("Nonproduction" | quote) }}
+        productName: 'IBM DataPower Gateway Virtual Edition for Nonproduction'
         productID: 'bd624448e8484592879f2e1a950686bd'
-        productChargedContainers: "all"
+        productChargedContainers: "{{ .Chart.Name }}"
     {{- else }}
+        productName: 'IBM DataPower Gateway Virtual Edition for Developers'
         productID: 'IBMDataPowerGatewayVirtualEdition_{{ .Values.datapower.image.tag }}_Developers'
         productChargedContainers: ""
     {{- end }}
   {{- end }}
+{{- if .Values.cip }}
+        productCloudpakRatio: 1:1
+        cloudpakName: IBM Cloud Pak for Integration
+        cloudpakId: c8b82d189e7545f0892db9ef2731b90d
+        cloudpakVersion: 2019.4.1
 {{- end }}
       labels:
         app: {{ template "dynamic-gateway-service.name" . }}
