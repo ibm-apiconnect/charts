@@ -69,15 +69,15 @@ spec:
         app: datapower-monitor
         release: {{ .Release.Name }}
     spec:
-      {{- if (or .Values.datapower.image.pullSecrets .Values.datapower.image.entitledRegistrySecret) }}
+      {{- if (or .Values.datapower.image.pullSecrets .Values.cip) }}
       imagePullSecrets:
       {{- if .Values.datapower.image.pullSecrets }}
       {{- range .Values.datapower.image.pullSecrets }}
       - name: {{ .name }}
       {{- end }}
       {{- end }}
-      {{- if .Values.datapower.image.entitledRegistrySecret }}
-      - name: {{ .Values.datapower.image.entitledRegistrySecret }}
+      {{- if .Values.cip }}
+      - name: ibm-entitlement-key
       {{- end }}
       {{- end }}
       serviceAccountName: {{ .Release.Name }}-dpm-sa
