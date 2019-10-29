@@ -65,6 +65,10 @@ spec:
       release: {{ .Release.Name }}
   template:
     metadata:
+      annotations:
+        productName: 'IBM DataPower Monitor'
+        productId: 'IBM DataPower Monitor'
+        productVersion: {{ .Values.datapowerMonitor.image.tag }}
       labels:
         app: datapower-monitor
         release: {{ .Release.Name }}
