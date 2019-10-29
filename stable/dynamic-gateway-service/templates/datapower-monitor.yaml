@@ -103,12 +103,23 @@ spec:
             value: {{ .Values.datapowerMonitor.env.peeringRecoveryCheckIntervalMs | default 1000 | quote }}
         ports:
           - containerPort: {{ .Values.datapowerMonitor.livenessPort | default 8080 }}
-            name: dpm-liveness
-        livenessProbe:
+            name: dpm-readiness
+        readinessProbe:
           httpGet:
             scheme: HTTP
             path: /
-            port: dpm-liveness
+            port: dpm-readiness
+          initialDelaySeconds: 10
+          timeoutSeconds: 5
+          periodSeconds: 10
+          failureThreshold: 3
+        livenessProbe:
+          exec:
+            command:
+            - /bin/sh
+            - -c
+            - |
+              ps | grep -v grep | grep k8s-datapower-monitor
           initialDelaySeconds: 10
           timeoutSeconds: 5
           periodSeconds: 10
