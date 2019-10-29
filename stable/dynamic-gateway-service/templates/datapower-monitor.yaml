@@ -111,6 +111,10 @@ spec:
           failureThreshold: 3
         resources:
 {{ toYaml .Values.datapowerMonitor.resources | indent 10 }}
+        securityContext:
+          capabilities:
+            drop:
+            - ALL
 {{- if .Values.datapower.adminUserSecret }}
         volumeMounts:
           - name: admin-user-password
