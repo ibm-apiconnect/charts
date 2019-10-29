@@ -51,6 +51,8 @@ spec:
         cloudpakName: IBM Cloud Pak for Integration
         cloudpakId: c8b82d189e7545f0892db9ef2731b90d
         cloudpakVersion: 2019.4.1
+        icp4i.ibm.com/product: datapower
+        icp4i.ibm.com/release: {{ .Release.Name }}
 {{- end }}
       labels:
         app: {{ template "dynamic-gateway-service.name" . }}
