@@ -32,6 +32,17 @@ datapower:
     tmsPeeringEnableSSL: "on"
     # Should be on or off
     enableTMS: "off"
+
+    # High-performance Peering
+    # Should be on or off. No default should be set, users MUST declare one way or another
+    highPerformancePeering:
+
+    # syslog-tcp settings
+    syslogState: "disabled"
+    syslogRemoteHost:
+    syslogRemotePort:
+    syslogTLSSecret:
+
     # peeringLogLevel sets log level for gateway-peering operation. Should only be internal, warning, notice, verbose, or debug.
     peeringLogLevel: "internal"
     # Format type for logging. Can be json-icp, text, raw, csv, cbe, or xml
@@ -39,6 +50,14 @@ datapower:
     defaultLogFormat: "text"
     # Log level for DataPower. Should be 0-7
     datapowerLogLevel: "3"
+    # Set to "true" if the log policy shold be disabled
+    policyDisableLog: "false"
+    # Set to "true" if the xslt policy shold be disabled
+    policyDisableXSLT: "false"
+    # Set to "true" if the gatewayscript policy shold be disabled
+    policyDisableGatewayScript: "false"
+    # Set to "true" if the ratelimit policy shold be disabled
+    policyDisableRateLimit: "false"
   # In order to replace the default admin credentials, the new credentials should be configured via Secret and `.Values.datapower.adminUserSecret` must be set to the name of
   # the Secret containing the admin user's credentials
   #
@@ -61,12 +80,19 @@ datapower:
   #
   # In all of the examples above, `.Values.datapower.adminUserSecret` should be set to 'admin-credentials' for the admin user to be configured.
   adminUserSecret:
+  apimVeloxCertsSecret:
   customDatapowerConfig:
   replicaCount: 3
   gatewayPeeringLocalPort: 16380
   gatewayPeeringMonitorPort: 26380
   tmsPeeringLocalPort: 16381
   tmsPeeringMonitorPort: 26381
+  apiDebugProbePeeringLocalPort: 16382
+  apiDebugProbePeeringMonitorPort: 26382
+  rlPeeringLocalPort: 16383
+  rlPeeringMonitorPort: 26383
+  subsPeeringLocalPort: 16384
+  subsPeeringMonitorPort: 26384
   apicGatewayServiceLocalPort: 3000
   apicGatewayServiceLocalAddress: 0.0.0.0
   apicGatewayServiceTLSSecret:
@@ -75,8 +101,6 @@ datapower:
   apiDebugProbeMaxRecords: 1000
   # api-debugprobe expiration in minutes
   apiDebugProbeExpiration: 60
-  apiDebugProbePeeringLocalPort: 16382
-  apiDebugProbePeeringMonitorPort: 26382
   # This value should either be 'on' or 'off'. Default is 'on'
   apicGatewayServiceV5CompatibilityMode: "on"
   apiGatewayLocalAddress: 0.0.0.0
@@ -102,6 +126,12 @@ datapower:
   snmpLocalAddress: 0.0.0.0
   snmpPort: 1161
   flexpointBundle:
+  loggingService:
+  - category: "apic-gw-service"
+    level: "info"
+  additionalConfig:
+  additionalLocalTar:
+  additionalCerts:
   storage:
     tmsPeering:
       accessModes:
@@ -117,10 +147,28 @@ datapower:
     limits:
       memory: 8Gi
       cpu: 8
-
-
 service:
   type: ClusterIP
+
+
+#-----------------------------------------------------------------------------
+# DataPower Monitor Section
+#
+datapowerMonitor:
+  livenessPort: 8080
+  env:
+    lifecycleDebounceMs: 10000
+    peeringRecoveryCheckIntervalMs: 1000
+  image:
+    repository:
+    tag:
+  resources:
+    requests:
+      memory: "256Mi"
+      cpu: "250m"
+    limits:
+      memory: "1Gi"
+      cpu: "500m"
 
 
 #-----------------------------------------------------------------------------

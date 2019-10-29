@@ -1,0 +1,21 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: {{ template "dynamic-gateway-service.fullname" . }}-static-init-scripts
+data:
+  init-admin-user.sh: |
+{{ .Files.Get "static/init-admin-user.sh" | indent 4 }}
+  init-dpm-check.sh: |
+{{ .Files.Get "static/init-dpm-check.sh" | indent 4 }}
+{{- if .Values.datapower.additionalConfig }}
+  custom-config-handler.sh: |
+{{ .Files.Get "static/custom-config-handler.sh" | indent 4 }}
+{{- end }}
+{{- if .Values.datapower.additionalLocalTar }}
+  unpack-local-files.sh: |
+{{ .Files.Get "static/unpack-local-files.sh" | indent 4 }}
+{{- end }}
+{{- if .Values.datapower.additionalCerts }}
+  additional-cert-handler.sh: |
+{{ .Files.Get "static/additional-cert-handler.sh" | indent 4 }}
+{{- end }}

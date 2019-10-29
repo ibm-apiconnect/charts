@@ -146,6 +146,10 @@ auto-startup.cfg: |
       report-history 5
     exit
 
+{{ range .Values.datapower.loggingService }}
+    logging event default-log "{{ .category }}" "{{ .level }}"
+{{- end }}
+
     %if% isfile temporary:///backtrace
     save error-report
     %endif%
@@ -205,6 +209,24 @@ apiconnect.cfg: |
     idcred gwd_id_cred gwd_key gwd_cert ca gwd_ca
     exit
 
+{{- if .Values.datapower.apimVeloxCertsSecret }}
+    crypto
+    certificate apim_public_cert cert:///apim/apim_client_public.cert.pem
+    exit
+
+    crypto
+    certificate apim_ca cert:///apim/cacert.pem
+    exit
+
+    crypto
+    valcred apim_valcred
+      admin-state enabled
+      certificate apim_public_cert
+      certificate apim_ca
+    exit
+    exit
+{{- end}}
+
     crypto
     ssl-client gwd_client
       reset
@@ -245,7 +267,12 @@ apiconnect.cfg: |
       ciphers DHE_DSS_WITH_3DES_EDE_CBC_SHA
       ciphers RSA_WITH_3DES_EDE_CBC_SHA
       idcred gwd_id_cred
+{{- if .Values.datapower.apimVeloxCertsSecret }}
+      valcred apim_valcred
+      validate-server-cert
+{{ else }}
       no validate-server-cert
+{{- end }}
       caching
       cache-timeout 300
       cache-size 100
@@ -298,9 +325,16 @@ apiconnect.cfg: |
       ciphers DHE_DSS_WITH_3DES_EDE_CBC_SHA
       ciphers RSA_WITH_3DES_EDE_CBC_SHA
       idcred gwd_id_cred
+{{- if .Values.datapower.apimVeloxCertsSecret }}
+      valcred apim_valcred
+      request-client-auth
+      require-client-auth
+      validate-client-cert
+{{ else }}
       no request-client-auth
       no require-client-auth
       no validate-client-cert
+{{- end }}
       send-client-auth-ca-list
       caching on
       cache-timeout 300
@@ -317,6 +351,25 @@ apiconnect.cfg: |
       curves secp256k1
     exit
     exit
+
+{{- if and (eq (.Values.datapower.apicGatewayServiceV5CompatibilityMode | default "on") "off") (eq (.Values.datapower.env.highPerformancePeering | default "") "on") }}
+    crypto
+      key rate_limit_key cert:///gwd/peering_key.pem
+    exit
+
+    crypto
+      certificate rate_limit_cert cert:///gwd/peering_cert.pem
+    exit
+
+    crypto
+      key subs_key cert:///gwd/peering_key.pem
+    exit
+
+    crypto
+      certificate subs_cert cert:///gwd/peering_cert.pem
+    exit
+{{- end }}
+
 
     %if% available "include-config"
 
@@ -416,6 +469,94 @@ apiconnect.cfg: |
       gateway-peering api-probe
     exit
 {{- end }}
+
+{{- if eq (.Values.datapower.env.syslogState | default "disabled") "enabled" }}
+{{- if .Values.datapower.env.syslogTLSSecret }}
+{{/*
+    # need a way to determine whether a key is included or not....
+    crypto
+      key api_probe_key cert:///syslog/key.pem
+    exit
+*/}}
+
+    crypto
+      certificate syslog_cert cert:///syslog/cert.pem
+    exit
+
+    crypto
+      valcred syslog_valcred
+        admin-state enabled
+        certificate syslog_cert
+      exit
+    exit
+
+    crypto
+      ssl-client syslog_ssl_client
+        reset
+        admin-state enabled
+        protocols TLSv1d2
+        ciphers ECDHE_ECDSA_WITH_AES_256_GCM_SHA384
+        ciphers ECDHE_RSA_WITH_AES_256_GCM_SHA384
+        ciphers ECDHE_ECDSA_WITH_AES_256_CBC_SHA384
+        ciphers ECDHE_RSA_WITH_AES_256_CBC_SHA384
+        ciphers ECDHE_ECDSA_WITH_AES_256_CBC_SHA
+        ciphers ECDHE_RSA_WITH_AES_256_CBC_SHA
+        ciphers DHE_DSS_WITH_AES_256_GCM_SHA384
+        ciphers DHE_RSA_WITH_AES_256_GCM_SHA384
+        ciphers DHE_RSA_WITH_AES_256_CBC_SHA256
+        ciphers DHE_DSS_WITH_AES_256_CBC_SHA256
+        ciphers DHE_RSA_WITH_AES_256_CBC_SHA
+        ciphers DHE_DSS_WITH_AES_256_CBC_SHA
+        ciphers RSA_WITH_AES_256_GCM_SHA384
+        ciphers RSA_WITH_AES_256_CBC_SHA256
+        ciphers RSA_WITH_AES_256_CBC_SHA
+        ciphers ECDHE_ECDSA_WITH_AES_128_GCM_SHA256
+        ciphers ECDHE_RSA_WITH_AES_128_GCM_SHA256
+        ciphers ECDHE_ECDSA_WITH_AES_128_CBC_SHA256
+        ciphers ECDHE_RSA_WITH_AES_128_CBC_SHA256
+        ciphers ECDHE_ECDSA_WITH_AES_128_CBC_SHA
+        ciphers ECDHE_RSA_WITH_AES_128_CBC_SHA
+        ciphers DHE_DSS_WITH_AES_128_GCM_SHA256
+        ciphers DHE_RSA_WITH_AES_128_GCM_SHA256
+        ciphers DHE_RSA_WITH_AES_128_CBC_SHA256
+        ciphers DHE_DSS_WITH_AES_128_CBC_SHA256
+        ciphers DHE_RSA_WITH_AES_128_CBC_SHA
+        ciphers DHE_DSS_WITH_AES_128_CBC_SHA
+        ciphers RSA_WITH_AES_128_GCM_SHA256
+        ciphers RSA_WITH_AES_128_CBC_SHA256
+        ciphers RSA_WITH_AES_128_CBC_SHA
+        ciphers ECDHE_ECDSA_WITH_3DES_EDE_CBC_SHA
+        ciphers ECDHE_RSA_WITH_3DES_EDE_CBC_SHA
+        ciphers DHE_RSA_WITH_3DES_EDE_CBC_SHA
+        ciphers DHE_DSS_WITH_3DES_EDE_CBC_SHA
+        ciphers RSA_WITH_3DES_EDE_CBC_SHA
+        ssl-client-features use-sni
+        valcred syslog_valcred
+        validate-server-cert on
+        caching
+        cache-timeout 300
+        cache-size 100
+        curves secp521r1
+        curves secp384r1
+        curves secp256k1
+        curves secp256r1
+      exit
+    exit
+{{- end }}
+
+    %if% available "include-config"
+
+    include-config "syslog-tcp-target"
+      config-url "config:///syslog.cfg"
+      auto-execute
+      no interface-detection
+    exit
+
+    exec "config:///syslog.cfg"
+
+    %endif%
+{{- end }}
+
 
 {{- if .Values.datapower.apicGatewayServiceV5CompatibilityMode }}
 {{- if eq .Values.datapower.apicGatewayServiceV5CompatibilityMode "off" }}

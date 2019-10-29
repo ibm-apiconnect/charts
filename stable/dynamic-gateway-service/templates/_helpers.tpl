@@ -30,3 +30,51 @@ Create chart name and version as used by the chart label.
 {{- define "dynamic-gateway-service.chart" -}}
 {{- printf "%s-%s" .Chart.Name .Chart.Version | replace "+" "_" | trunc 63 | trimSuffix "-" -}}
 {{- end -}}
+
+
+{{/*
+Determine whether a valid DataPower license version is set
+*/}}
+{{- define "datapower-requirements.validLicenseVersion" -}}
+{{ $licenseVersion := quote .Values.datapower.licenseVersion }}
+{{- if and .Values.datapower.licenseVersion (or (eq $licenseVersion ("Production" | quote)) (eq $licenseVersion ("Nonproduction" | quote)) (eq $licenseVersion ("Developers" | quote))) -}}
+true
+{{- else -}}
+false
+{{- end -}}
+{{- end -}}
+
+{{/*
+Determine whether the DataPower Monitor image has been set
+*/}}
+{{- define "datapower-requirements.dpmImageSet" -}}
+{{- if and .Values.datapowerMonitor.image.repository .Values.datapowerMonitor.image.tag -}}
+true
+{{- else -}}
+false
+{{- end -}}
+{{- end -}}
+
+{{/*
+Determine whether the high-performance peering option has been set to "on" or "off"
+*/}}
+{{- define "datapower-requirements.hpPeeringOptionSet" -}}
+{{- $v5cMode := quote .Values.datapower.apicGatewayServiceV5CompatibilityMode -}}
+{{- $hpPeeringOption := quote .Values.datapower.env.highPerformancePeering -}}
+{{- if or (ne $v5cMode ("off" | quote)) (eq $hpPeeringOption ("on" | quote)) (eq $hpPeeringOption ("off" | quote)) -}}
+true
+{{- else -}}
+false
+{{- end -}}
+{{- end -}}
+
+{{/*
+Determine whether conditions for DataPower pods have been satisfied
+*/}}
+{{- define "datapower-requirements.satisfied" -}}
+{{- if and (eq (include "datapower-requirements.validLicenseVersion" .) "true") (eq (include "datapower-requirements.hpPeeringOptionSet" .) "true") (eq (include "datapower-requirements.dpmImageSet" .) "true") -}}
+true
+{{- else -}}
+false
+{{- end -}}
+{{- end -}}
