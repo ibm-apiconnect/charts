@@ -9,7 +9,6 @@ metadata:
     release: {{ .Release.Name }}
     heritage: {{ .Release.Service }}
   annotations:
-    "service.alpha.kubernetes.io/tolerate-unready-endpoints": "true"
 spec:
   ports:
     - port: {{ .Values.datapower.gatewayPeeringLocalPort }}
