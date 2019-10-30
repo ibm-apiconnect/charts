@@ -128,7 +128,7 @@ spec:
             - -c
             - |
               ps | grep -v grep | grep k8s-datapower-monitor
-          initialDelaySeconds: 10
+          initialDelaySeconds: 1
           timeoutSeconds: 5
           periodSeconds: 10
           failureThreshold: 3
