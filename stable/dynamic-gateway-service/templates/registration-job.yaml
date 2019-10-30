@@ -6,12 +6,25 @@ metadata:
 spec:
   template:
     spec:
-      {{- if .Values.datapower.image.pullSecrets }}
+      {{- if (or .Values.datapower.image.pullSecrets .Values.cip) }}
       imagePullSecrets:
+        {{- if .Values.datapower.image.pullSecrets }}
         {{- range .Values.datapower.image.pullSecrets }}
         - name: {{ .name }}
         {{- end }}
+        {{- end }}
+        {{- if .Values.cip }}
+        - name: ibm-entitlement-key
+        {{- end }}
       {{- end }}
+      affinity:
+        nodeAffinity:
+          requiredDuringSchedulingIgnoredDuringExecution:
+            nodeSelectorTerms:
+              - matchExpressions:
+                - key: "beta.kubernetes.io/arch"
+                  operator: In
+                  values: ["amd64"]
       containers:
         - name: icp4i-od-registration-container
           image: {{ .Values.odTracing.imageAgent }}
