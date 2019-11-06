@@ -462,7 +462,7 @@ apiconnect.cfg: |
 
     %endif%
 
-    api-debugprobe
+    apiprobe-settings
       admin-state enabled
       max-records {{ .Values.datapower.apiDebugProbeMaxRecords }}
       expiration {{ .Values.datapower.apiDebugProbeExpiration }}
