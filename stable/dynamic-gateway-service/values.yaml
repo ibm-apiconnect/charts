@@ -99,7 +99,7 @@ datapower:
   # This value should either be 'enabled' or 'disabled'. Default is disabled
   apiDebugProbe: "disabled"
   apiDebugProbeMaxRecords: 1000
-  # api-debugprobe expiration in minutes
+  # apiprobe-settings expiration in minutes
   apiDebugProbeExpiration: 60
   # This value should either be 'on' or 'off'. Default is 'on'
   apicGatewayServiceV5CompatibilityMode: "on"
