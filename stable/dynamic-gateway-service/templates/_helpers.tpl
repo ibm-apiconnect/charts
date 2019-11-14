@@ -16,7 +16,16 @@ We truncate at 63 chars because some Kubernetes name fields are limited to this 
 If release name contains chart name it will be used as a full name.
 */}}
 {{- define "dynamic-gateway-service.fullname" -}}
+{{- if .Values.fullnameOverride -}}
+{{- .Values.fullnameOverride | trunc 63 | trimSuffix "-" -}}
+{{- else -}}
+{{- $name := default (include "dynamic-gateway-service.name" .) .Values.nameOverride -}}
+{{- if contains $name .Release.Name -}}
+{{- .Release.Name | trunc 63 | trimSuffix "-" -}}
+{{- else -}}
 {{ .Release.Name }}-{{ template "dynamic-gateway-service.name" . }}
+{{- end -}}
+{{- end -}}
 {{- end -}}
 
 {{/*
