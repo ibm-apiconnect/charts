@@ -3,7 +3,7 @@
 # additional-cert-handler.sh
 #
 # This script moves the added certs from their volume mounted locations into
-# the correct domain in /root/secure/usrcerts/
+# the correct domain in /opt/ibm/datapower/root/secure/usrcerts/
 #
 ###############################################################################
 
@@ -16,14 +16,14 @@ do
     # default domain is top level
     if [ "$domain" == "default" ]
     then
-      cp -rL $INITCERTS/$domain/$secret/* /root/secure/usrcerts/
+      cp -rL $INITCERTS/$domain/$secret/* /opt/ibm/datapower/root/secure/usrcerts/
       continue
     fi
-    if [ ! -d "/root/secure/usrcerts/$domain" ]
+    if [ ! -d "/opt/ibm/datapower/root/secure/usrcerts/$domain" ]
     then
-      mkdir /root/secure/usrcerts/$domain
+      mkdir /opt/ibm/datapower/root/secure/usrcerts/$domain
     fi
-    cp -rL $INITCERTS/$domain/$secret/* /root/secure/usrcerts/$domain/
+    cp -rL $INITCERTS/$domain/$secret/* /opt/ibm/datapower/root/secure/usrcerts/$domain/
   done
 done
 

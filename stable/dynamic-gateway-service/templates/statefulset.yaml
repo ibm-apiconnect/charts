@@ -79,8 +79,8 @@ spec:
         fsGroup: 0
 {{- else }}
         runAsNonRoot: true
-        runAsUser: 101
-        fsGroup: 101
+        runAsUser: 1000
+        fsGroup: 1000
 {{- end }}
       affinity:
 {{- if .Values.affinity }}
@@ -118,8 +118,8 @@ spec:
             fsGroup: 0
 {{- else }}
             runAsNonRoot: true
-            runAsUser: 101
-            fsGroup: 101
+            runAsUser: 1000
+            fsGroup: 1000
 {{- end }}
             capabilities:
               drop:
@@ -137,9 +137,9 @@ spec:
             - -c
             - |
               sh /opt/ibm/datapower/init/scripts/init-dpm-check.sh
-              cp -RL /opt/ibm/datapower/init/config/* /drouter/config
-              mkdir -p /root/secure/usrcerts/apiconnect/gwd
-              cp -RL /opt/ibm/datapower/init/apiconnect-gwd/* /root/secure/usrcerts/apiconnect/gwd/
+              cp -RL /opt/ibm/datapower/init/config/* /opt/ibm/datapower/drouter/config
+              mkdir -p /opt/ibm/datapower/root/secure/usrcerts/apiconnect/gwd
+              cp -RL /opt/ibm/datapower/init/apiconnect-gwd/* /opt/ibm/datapower/root/secure/usrcerts/apiconnect/gwd/
 {{- if .Values.datapower.adminUserSecret }}
               sh /opt/ibm/datapower/init/scripts/init-admin-user.sh
 {{- end }}
@@ -159,22 +159,22 @@ spec:
               sh /opt/ibm/datapower/init/scripts/apim-certs-handler.sh client
 {{- end }}
 {{- if .Values.datapower.customDatapowerConfig }}
-              cat /opt/ibm/datapower/init/custom-config/*.cfg > /drouter/config/apiconnect/custom-config.cfg
+              cat /opt/ibm/datapower/init/custom-config/*.cfg > /opt/ibm/datapower/drouter/config/apiconnect/custom-config.cfg
 {{- end }}
 {{/* If SSH is enabled, DP runs as root. Only chown if SSH is not enabled */}}
 {{- if ne .Values.datapower.gatewaySshState "enabled" }}
-              chown -R 101:101 /drouter/config/* /root/secure/usrcerts/apiconnect
+              chown -R 1000:1000 /opt/ibm/datapower/drouter/config/* /opt/ibm/datapower/root/secure/usrcerts/apiconnect
 {{- end }}
-              chmod -R 0777 /drouter/config/* /root/secure/usrcerts/apiconnect
+              chmod -R 0777 /opt/ibm/datapower/drouter/config/* /opt/ibm/datapower/root/secure/usrcerts/apiconnect
 {{- if eq (include "datapower-requirements.satisfied" .) "true"}}
               set -x
               export $(env | grep ^DATAPOWER_ | cut -d= -f1)
-              sh /start/migrate-tms-pv.sh
-              /root/node /start/gateway-peering.js
-              /root/node /start/syslog-tcp.js
-              exec /start.sh --log-format {{ .Values.datapower.env.defaultLogFormat }}
+              sh /opt/ibm/datapower/start/migrate-tms-pv.sh
+              /opt/ibm/datapower/root/node /opt/ibm/datapower/start/gateway-peering.js
+              /opt/ibm/datapower/root/node /opt/ibm/datapower/start/syslog-tcp.js
+              exec /opt/ibm/datapower/root/drouter --log-format {{ .Values.datapower.env.defaultLogFormat }}
 {{- else }}
-              sh /start/dp-requirement-error.sh
+              sh /opt/ibm/datapower/start/dp-requirement-error.sh
               exit 1
 {{- end }}
           stdin: true
@@ -389,7 +389,7 @@ spec:
             - name: init-certs-volume
               mountPath: /opt/ibm/datapower/init/apiconnect-gwd
             - name: root-secure-usrcerts-volume
-              mountPath: /root/secure/usrcerts
+              mountPath: /opt/ibm/datapower/root/secure/usrcerts
 {{- if .Values.datapower.adminUserSecret }}
             - name: init-admin-user-secret
               mountPath: /opt/ibm/datapower/init/admin-user-secret
@@ -399,12 +399,12 @@ spec:
               mountPath: /opt/ibm/datapower/init/custom-config
 {{- end }}
             - name: start-volume
-              mountPath: /start
+              mountPath: /opt/ibm/datapower/start
             - name: drouter-config-volume
-              mountPath: /drouter/config
+              mountPath: /opt/ibm/datapower/drouter/config
 {{- if .Values.datapower.env.syslogTLSSecret }}
             - name: root-secure-usrcerts-apiconnect-syslog-volume
-              mountPath: /root/secure/usrcerts/apiconnect/syslog
+              mountPath: /opt/ibm/datapower/root/secure/usrcerts/apiconnect/syslog
 {{- end }}
 {{- if .Values.datapower.apimServerValidationSecret }}
             - name: init-apim-certs-server-volume
@@ -415,22 +415,22 @@ spec:
               mountPath: /opt/ibm/datapower/init/apim-certs/client
 {{- end }}
             - name: drouter-ramdisk2-volume
-              mountPath: /drouter/ramdisk2
+              mountPath: /opt/ibm/datapower/drouter/ramdisk2
             - name: drouter-ramdisk2-mnt-volume
-              mountPath: /drouter/ramdisk2/mnt
+              mountPath: /opt/ibm/datapower/drouter/ramdisk2/mnt
             - name: drouter-ramdisk2-mnt-raid-volume
-              mountPath: /drouter/ramdisk2/mnt/raid-volume
+              mountPath: /opt/ibm/datapower/drouter/ramdisk2/mnt/raid-volume
             - name: drouter-temporary-volume
-              mountPath: /drouter/temporary
+              mountPath: /opt/ibm/datapower/drouter/temporary
 {{- if eq (.Values.datapower.env.enableTMS | default "off") "on" }}
             - name: tms
-              mountPath: /drouter/ramdisk2/mnt/raid-volume/raid0
+              mountPath: /opt/ibm/datapower/drouter/ramdisk2/mnt/raid-volume/raid0
 {{- end }}
 {{- if .Values.datapower.additionalLocalTar }}
             - name: init-additional-local-volume
               mountPath: /opt/ibm/datapower/init/additional-local
             - name: drouter-local-volume
-              mountPath: /drouter/local
+              mountPath: /opt/ibm/datapower/drouter/local
 {{- end }}
 {{- if .Values.datapower.additionalCerts }}
 {{- range .Values.datapower.additionalCerts }}

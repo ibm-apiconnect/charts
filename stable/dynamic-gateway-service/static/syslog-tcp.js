@@ -80,7 +80,7 @@ exit
       enableSSL: typeof DATAPOWER_SYSLOG_TCP_TLS_SECRET === 'string' && DATAPOWER_SYSLOG_TCP_TLS_SECRET !== ''
     });
 
-    let syslogConfigPath = `/drouter/config/${APICONNECT_DATAPOWER_DOMAIN}/syslog.cfg`;
+    let syslogConfigPath = `/opt/ibm/datapower/drouter/config/${APICONNECT_DATAPOWER_DOMAIN}/syslog.cfg`;
     await writeFile(syslogConfigPath, syslogConfig);
     log(`Generated ${syslogConfigPath}:\n${syslogConfig}`);
   } catch (err) {

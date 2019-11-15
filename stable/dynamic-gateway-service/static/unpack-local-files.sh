@@ -31,6 +31,6 @@ then
 fi
 
 # Copy all files over to local path
-cp -r * /drouter/local/
+cp -r * /opt/ibm/datapower/drouter/local/
 
 cd $return_dir

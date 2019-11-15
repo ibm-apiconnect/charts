@@ -22,24 +22,24 @@ do
   if [ "$domain" == "default" ]
   then
     # default domain is defined in auto-startup.cfg
-    cat $configfile >> /drouter/config/auto-startup.cfg
+    cat $configfile >> /opt/ibm/datapower/drouter/config/auto-startup.cfg
     # No further action needed for default domain
     continue
   fi
 
   # Check for existence of domain
-  if [ -e "/drouter/config/$domain/$domain.cfg" ]
+  if [ -e "/opt/ibm/datapower/drouter/config/$domain/$domain.cfg" ]
   then
     # Append new configuration into existing domain
-    cat $configfile >> /drouter/config/$domain/$domain.cfg
+    cat $configfile >> /opt/ibm/datapower/drouter/config/$domain/$domain.cfg
     # No further action needed
     continue
   fi
 
   # Domain does not exist, so create it
-  mkdir /drouter/config/$domain
-  echo "top; configure terminal;" > /drouter/config/$domain/$domain.cfg
-  cat $configfile >> /drouter/config/$domain/$domain.cfg
+  mkdir /opt/ibm/datapower/drouter/config/$domain
+  echo "top; configure terminal;" > /opt/ibm/datapower/drouter/config/$domain/$domain.cfg
+  cat $configfile >> /opt/ibm/datapower/drouter/config/$domain/$domain.cfg
 
   # Append config execution to default domain
   (
@@ -59,7 +59,7 @@ exit
 
 %endif%
 EOF
-  ) >> /drouter/config/auto-startup.cfg
+  ) >> /opt/ibm/datapower/drouter/config/auto-startup.cfg
 
 done
 

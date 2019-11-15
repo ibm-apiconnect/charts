@@ -117,7 +117,7 @@ const getPeers = async () => {
 const writeCert = async (name) => {
   let data = process.env[`APICONNECT_CERT_${name.replace(/\//g, '__')}`];
   if (data) {
-    await writeFile(`/root/secure/usrcerts/${APICONNECT_DATAPOWER_DOMAIN}/${name}.pem`, data);
+    await writeFile(`/opt/ibm/datapower/root/secure/usrcerts/${APICONNECT_DATAPOWER_DOMAIN}/${name}.pem`, data);
   }
 }
 
@@ -224,7 +224,7 @@ exit
     }
 
     let config = gpConfigs.join('\n\n');
-    let gpConfigPath = `/drouter/config/${APICONNECT_DATAPOWER_DOMAIN}/gateway-peering.cfg`;
+    let gpConfigPath = `/opt/ibm/datapower/drouter/config/${APICONNECT_DATAPOWER_DOMAIN}/gateway-peering.cfg`;
     await writeFile(gpConfigPath, config);
     log(`Generated ${gpConfigPath}:\n${config}`);
 
@@ -234,10 +234,10 @@ exit
 
       if (APICONNECT_V5_COMPAT_MODE === 'on') {
         generateTMSConfig = generateQuotaEnforcementConfig;
-        tmsConfigPath = '/drouter/config/tms-peering.cfg';
+        tmsConfigPath = '/opt/ibm/datapower/drouter/config/tms-peering.cfg';
       } else {
         generateTMSConfig = generateGatewayPeeringConfig;
-        tmsConfigPath = `/drouter/config/${APICONNECT_DATAPOWER_DOMAIN}/tms-peering.cfg`;
+        tmsConfigPath = `/opt/ibm/datapower/drouter/config/${APICONNECT_DATAPOWER_DOMAIN}/tms-peering.cfg`;
       }
 
       let tmsConfig = generateTMSConfig({
@@ -270,7 +270,7 @@ exit
         sslCert: ADP_PEERING_SSL_CERT
       });
 
-      let adpConfigPath = `/drouter/config/${APICONNECT_DATAPOWER_DOMAIN}/api-probe-peering.cfg`;
+      let adpConfigPath = `/opt/ibm/datapower/drouter/config/${APICONNECT_DATAPOWER_DOMAIN}/api-probe-peering.cfg`;
       await writeFile(adpConfigPath, adpConfig);
       log(`Generated ${adpConfigPath}\n${adpConfig}`);
     }
