@@ -3,10 +3,10 @@
 Expand the name of the chart.
 */}}
 {{- define "dynamic-gateway-service.name" -}}
-{{- if eq (.Values.apicGatewayServiceV5CompatibilityMode | quote) "on" -}}
-v5c-{{- .Chart.Name | trunc 63 | trimSuffix "-" -}}
+{{- if ne (.Values.datapower.apicGatewayServiceV5CompatibilityMode | default "on") "off" -}}
+v5c-gateway-service
 {{- else -}}
-api-{{- .Chart.Name | trunc 63 | trimSuffix "-" -}}
+api-gateway-service
 {{- end -}}
 {{- end -}}
 
@@ -16,11 +16,15 @@ We truncate at 63 chars because some Kubernetes name fields are limited to this 
 If release name contains chart name it will be used as a full name.
 */}}
 {{- define "dynamic-gateway-service.fullname" -}}
-{{- $name := (include "dynamic-gateway-service.name" .) -}}
+{{- if .Values.fullnameOverride -}}
+{{- .Values.fullnameOverride | trunc 63 | trimSuffix "-" -}}
+{{- else -}}
+{{- $name := default (include "dynamic-gateway-service.name" .) .Values.nameOverride -}}
 {{- if contains $name .Release.Name -}}
 {{- .Release.Name | trunc 63 | trimSuffix "-" -}}
 {{- else -}}
-{{- printf "%s-%s" .Release.Name $name | trunc 63 | trimSuffix "-" -}}
+{{ .Release.Name }}-{{ template "dynamic-gateway-service.name" . }}
+{{- end -}}
 {{- end -}}
 {{- end -}}
 
