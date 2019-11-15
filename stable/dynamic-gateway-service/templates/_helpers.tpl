@@ -3,11 +3,7 @@
 Expand the name of the chart.
 */}}
 {{- define "dynamic-gateway-service.name" -}}
-{{- if ne (.Values.datapower.apicGatewayServiceV5CompatibilityMode | default "on") "off" -}}
-v5c-gateway-service
-{{- else -}}
-api-gateway-service
-{{- end -}}
+{{- default .Chart.Name .Values.nameOverride | trunc 63 | trimSuffix "-" -}}
 {{- end -}}
 
 {{/*
@@ -19,11 +15,11 @@ If release name contains chart name it will be used as a full name.
 {{- if .Values.fullnameOverride -}}
 {{- .Values.fullnameOverride | trunc 63 | trimSuffix "-" -}}
 {{- else -}}
-{{- $name := default (include "dynamic-gateway-service.name" .) .Values.nameOverride -}}
+{{- $name := default .Chart.Name .Values.nameOverride -}}
 {{- if contains $name .Release.Name -}}
 {{- .Release.Name | trunc 63 | trimSuffix "-" -}}
 {{- else -}}
-{{ .Release.Name }}-{{ template "dynamic-gateway-service.name" . }}
+{{- printf "%s-%s" .Release.Name $name | trunc 63 | trimSuffix "-" -}}
 {{- end -}}
 {{- end -}}
 {{- end -}}
