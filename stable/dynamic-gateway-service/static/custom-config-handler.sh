@@ -57,8 +57,6 @@ include-config "$domain-cfg"
   no interface-detection
 exit
 
-exec "config:///$domain/$domain.cfg"
-
 %endif%
 EOF
   ) >> /drouter/config/auto-startup.cfg
