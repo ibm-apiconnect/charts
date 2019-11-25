@@ -675,7 +675,7 @@ spec:
 {{- if .Values.datapower.additionalLocalTar }}
         - name: init-additional-local-volume
           configMap:
-            name: {{ template "dynamic-gateway-service.fullname" . }}-local-files
+            name: {{ .Values.datapower.additionalLocalTar }}
         - name: drouter-local-volume
           emptyDir: {}
 {{- end }}
