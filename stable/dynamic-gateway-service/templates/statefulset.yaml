@@ -466,6 +466,10 @@ spec:
 {{- if .Values.datapower.additionalConfig }}
             - name: init-additional-config-volume
               mountPath: /opt/ibm/datapower/init/additional-config
+            {{- range .Values.datapower.additionalConfig }}
+            - name: additional-config-{{ .config }}
+              mountPath: /opt/ibm/datapower/init/additional-config/{{ .domain }}
+            {{- end }}
 {{- end }}
 {{- if eq (.Values.odTracing.enabled | default "false") "true" }}
             - name: icp4i-od-jaeger-client
@@ -669,8 +673,12 @@ spec:
 {{- end }}
 {{- if .Values.datapower.additionalConfig }}
         - name: init-additional-config-volume
+          emptyDir: {}
+        {{- range .Values.datapower.additionalConfig }}
+        - name: additional-config-{{ .config }}
           configMap:
-            name: {{ template "dynamic-gateway-service.fullname" . }}-custom-config
+            name: {{ .config }}
+        {{- end }}
 {{- end }}
 {{- if .Values.datapower.additionalLocalTar }}
         - name: init-additional-local-volume
