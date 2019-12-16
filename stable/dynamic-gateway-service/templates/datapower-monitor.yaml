@@ -65,17 +65,34 @@ spec:
       release: {{ .Release.Name }}
   template:
     metadata:
+      annotations:
+        productName: 'IBM DataPower Monitor'
+        productId: 'IBM DataPower Monitor'
+        productVersion: {{ .Values.datapowerMonitor.image.tag }}
       labels:
         app: datapower-monitor
         release: {{ .Release.Name }}
     spec:
-      {{- if .Values.datapower.image.pullSecrets }}
+      {{- if (or .Values.datapower.image.pullSecrets .Values.cip) }}
       imagePullSecrets:
+      {{- if .Values.datapower.image.pullSecrets }}
       {{- range .Values.datapower.image.pullSecrets }}
       - name: {{ .name }}
       {{- end }}
       {{- end }}
+      {{- if .Values.cip }}
+      - name: ibm-entitlement-key
+      {{- end }}
+      {{- end }}
       serviceAccountName: {{ .Release.Name }}-dpm-sa
+      affinity:
+        nodeAffinity:
+          requiredDuringSchedulingIgnoredDuringExecution:
+            nodeSelectorTerms:
+              - matchExpressions:
+                - key: "beta.kubernetes.io/arch"
+                  operator: In
+                  values: ["amd64"]
       containers:
       - name: datapower-monitor
         image: "{{ .Values.datapowerMonitor.image.repository }}:{{ .Values.datapowerMonitor.image.tag }}"
@@ -94,18 +111,33 @@ spec:
             value: {{ .Values.datapowerMonitor.env.peeringRecoveryCheckIntervalMs | default 1000 | quote }}
         ports:
           - containerPort: {{ .Values.datapowerMonitor.livenessPort | default 8080 }}
-            name: dpm-liveness
-        livenessProbe:
+            name: dpm-readiness
+        readinessProbe:
           httpGet:
             scheme: HTTP
             path: /
-            port: dpm-liveness
+            port: dpm-readiness
           initialDelaySeconds: 10
+          timeoutSeconds: 5
+          periodSeconds: 10
+          failureThreshold: 3
+        livenessProbe:
+          exec:
+            command:
+            - /bin/sh
+            - -c
+            - |
+              ps | grep -v grep | grep k8s-datapower-monitor
+          initialDelaySeconds: 1
           timeoutSeconds: 5
           periodSeconds: 10
           failureThreshold: 3
         resources:
 {{ toYaml .Values.datapowerMonitor.resources | indent 10 }}
+        securityContext:
+          capabilities:
+            drop:
+            - ALL
 {{- if .Values.datapower.adminUserSecret }}
         volumeMounts:
           - name: admin-user-password

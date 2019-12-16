@@ -99,7 +99,7 @@ datapower:
   # This value should either be 'enabled' or 'disabled'. Default is disabled
   apiDebugProbe: "disabled"
   apiDebugProbeMaxRecords: 1000
-  # api-debugprobe expiration in minutes
+  # apiprobe-settings expiration in minutes
   apiDebugProbeExpiration: 60
   # This value should either be 'on' or 'off'. Default is 'on'
   apicGatewayServiceV5CompatibilityMode: "on"
@@ -191,3 +191,44 @@ ingress:
     hosts:
     - name: gwd.example.com
     annotations:
+
+
+
+#-----------------------------------------------------------------------------
+# Open Tracing Section
+#
+odTracing:
+  enabled: "false"
+  pullPolicy: "IfNotPresent"
+  # od manager FQDN : icp4i-od.<od manager namespace>.svc.cluster.local
+  odTracingRegistrationHostname: icp4i-od.tracing.svc
+  # od Store (elasticsearch) FQDN : icp4i-od.<od manager namespace>.svc.cluster.local
+  odTracingDataHostname: od-store-od.tracing.svc
+  imageAgent: ibmcom/icp4i_od_agent:1.0.0-amd64
+  imageCollector: ibmcom/icp4i_od_collector:1.0.0-amd64
+  collector:
+    livenessProbe:
+      initialDelaySeconds: 10
+      periodSeconds: 10
+      timeoutSeconds: 2
+      failureThreshold: 3
+
+    readinessProbe:
+      initialDelaySeconds: 10
+      periodSeconds: 10
+      timeoutSeconds: 2
+      failureThreshold: 3
+
+  agent:
+    livenessProbe:
+      initialDelaySeconds: 10
+      periodSeconds: 10
+      timeoutSeconds: 2
+      failureThreshold: 3
+
+    readinessProbe:
+      initialDelaySeconds: 10
+      periodSeconds: 10
+      timeoutSeconds: 2
+      failureThreshold: 3
+

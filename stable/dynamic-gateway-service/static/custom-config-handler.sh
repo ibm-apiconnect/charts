@@ -38,7 +38,7 @@ do
 
   # Domain does not exist, so create it
   mkdir /drouter/config/$domain
-  echo "top; configuration;" > /drouter/config/$domain/$domain.cfg
+  echo "top; configure terminal;" > /drouter/config/$domain/$domain.cfg
   cat $configfile >> /drouter/config/$domain/$domain.cfg
 
   # Append config execution to default domain
@@ -56,8 +56,6 @@ include-config "$domain-cfg"
   auto-execute
   no interface-detection
 exit
-
-exec "config:///$domain/$domain.cfg"
 
 %endif%
 EOF
