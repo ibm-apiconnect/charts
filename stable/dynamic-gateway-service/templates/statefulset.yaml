@@ -122,15 +122,14 @@ spec:
             fsGroup: 1000
 {{- end }}
             capabilities:
+{{- if ne .Values.datapower.gatewaySshState "enabled" }}
               drop:
               - ALL
+{{- end }}
 # Add capabilities needed for SSH only when SSH is enabled
 {{- if eq .Values.datapower.gatewaySshState "enabled" }}
               add:
-              - SETGID
-              - SETUID
-              - SYS_CHROOT
-              - DAC_OVERRIDE
+              - ALL
 {{- end }}
           command:
             - sh
