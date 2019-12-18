@@ -239,6 +239,8 @@ spec:
 {{- else }}
               value: "disabled"
 {{- end }}
+            - name: "PROBE_SERVER_PORT"
+              value: {{ .Values.datapower.apicGatewayServiceProbePort | quote }}
             - name: "DATAPOWER_SYSLOG_TCP_REMOTE_HOST"
               value: {{ .Values.datapower.env.syslogRemoteHost | quote }}
             - name: "DATAPOWER_SYSLOG_TCP_REMOTE_PORT"
@@ -349,6 +351,8 @@ spec:
               name: adp-local-port
             - containerPort: {{ .Values.datapower.apiDebugProbePeeringMonitorPort }}
               name: adp-monit-port
+            - containerPort: {{ .Values.datapower.apicGatewayServiceProbePort }}
+              name: apic-gw-probe
             - containerPort: {{ .Values.datapower.apicGatewayServiceLocalPort }}
               name: apic-gw-mgmt
             - containerPort: {{ .Values.datapower.apiGatewayLocalPort }}
@@ -361,18 +365,18 @@ spec:
               name: rmi-port
           livenessProbe:
             httpGet:
-              scheme: HTTPS
+              scheme: HTTP
               path: /health
-              port: apic-gw-mgmt
+              port: apic-gw-probe
             initialDelaySeconds: 180
             timeoutSeconds: 5
             periodSeconds: 10
             failureThreshold: 12
           readinessProbe:
             httpGet:
-              scheme: HTTPS
+              scheme: HTTP
               path: /ready
-              port: apic-gw-mgmt
+              port: apic-gw-probe
             initialDelaySeconds: 120
             timeoutSeconds: 5
             periodSeconds: 10

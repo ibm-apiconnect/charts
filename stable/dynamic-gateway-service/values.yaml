@@ -98,6 +98,7 @@ datapower:
   rlPeeringMonitorPort: 26383
   subsPeeringLocalPort: 16384
   subsPeeringMonitorPort: 26384
+  apicGatewayServiceProbePort: 2999
   apicGatewayServiceLocalPort: 3000
   apicGatewayServiceLocalAddress: 0.0.0.0
   apicGatewayServiceTLSSecret:
