@@ -4,17 +4,28 @@
 # secret specified in .Values.datapower.apimVeloxCertsSecret and configuring
 # the `crypto certificate` and `crypto valcred` objects that use them to
 # enable support for mutual TLS between APIM and the APIC Gateway Service.
-#
-# All certificate files should be in .pem format and mounted to the directory
-# /root/secure/usrcerts/apiconnect/apim
 ###############################################################################
 
-INIT_CERTS_DIR=/opt/ibm/datapower/init/apim-certs
-APIM_CERTS_DIR=/root/secure/usrcerts/apiconnect/apim
+
+TYPE=$1
+
+case $TYPE in
+  client|server)
+    echo "Generating configuration to validate TLS connections with API Manager $TYPE"
+    ;;
+  *)
+    echo "Cannot generate TLS validation configuration. Invalid type: $TYPE"
+    exit 1
+    ;;
+esac
+
+
+INIT_CERTS_DIR=/opt/ibm/datapower/init/apim-certs/$TYPE
+APIM_CERTS_DIR=/root/secure/usrcerts/apiconnect/apim/$TYPE
 APIC_CFG_DIR=/drouter/config/apiconnect
-TMP_CERTS_CFG=$APIC_CFG_DIR/apim-certs-cfg.tmp
-TMP_VALCRED_CFG=$APIC_CFG_DIR/apim-valcred-cfg.tmp
-APIC_VALCRED_CFG=$APIC_CFG_DIR/apim-valcred.cfg
+TMP_CERTS_CFG=$APIC_CFG_DIR/apim-$TYPE-certs-cfg.tmp
+TMP_VALCRED_CFG=$APIC_CFG_DIR/apim-$TYPE-valcred-cfg.tmp
+APIC_VALCRED_CFG=$APIC_CFG_DIR/apim-$TYPE-valcred.cfg
 
 mkdir -p $APIM_CERTS_DIR
 cp -rL $INIT_CERTS_DIR/*.pem $APIM_CERTS_DIR/
@@ -27,7 +38,7 @@ echo "crypto" > $TMP_CERTS_CFG
   cat <<EOF
 
 crypto
-valcred apim_valcred
+valcred apim_${TYPE}_valcred
   admin-state enabled
 EOF
 ) > $TMP_VALCRED_CFG
@@ -40,17 +51,17 @@ top; configure terminal;
 EOF
 ) > $APIC_VALCRED_CFG
 
-# Loop over all .pem files in /root/secure/usrcerts/apiconnect/apim
+# Loop over all .pem files in /root/secure/usrcerts/apiconnect/apim/$TYPE
 for certfile in $APIM_CERTS_DIR/*.pem
 do
   # Get certificate name by stripping path and extension
-  certname="$(echo $certfile | sed -e 's|'$APIM_CERTS_DIR'/||g' -e 's|.pem||g')"
+  certname="$(echo $certfile | sed -e 's|'${APIM_CERTS_DIR}'/||g' -e 's|.pem||g')"
 
   # Create `crypto certificate` object for the certificate
-  echo "certificate apim_cert_$certname cert:///apim/$certname.pem" >> $TMP_CERTS_CFG
+  echo "certificate apim_${TYPE}_cert_${certname} cert:///apim/${TYPE}/${certname}.pem" >> $TMP_CERTS_CFG
 
   # Add certificate to the valcred config
-  echo "  certificate apim_cert_$certname" >> $TMP_VALCRED_CFG
+  echo "  certificate apim_${TYPE}_cert_${certname}" >> $TMP_VALCRED_CFG
 done
 
 # Close `crypto` command in temp certs file

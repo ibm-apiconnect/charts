@@ -209,16 +209,16 @@ apiconnect.cfg: |
     idcred gwd_id_cred gwd_key gwd_cert ca gwd_ca
     exit
 
-{{- if .Values.datapower.apimVeloxCertsSecret }}
+{{- if .Values.datapower.apimServerValidationSecret }}
     %if% available "include-config"
 
-    include-config "apim-valcred-cfg"
-      config-url "config:///apim-valcred.cfg"
+    include-config "apim-server-valcred-cfg"
+      config-url "config:///apim-server-valcred.cfg"
       auto-execute
       no interface-detection
     exit
 
-    exec "config:///apim-valcred.cfg"
+    exec "config:///apim-server-valcred.cfg"
 
     %endif%
 {{- end}}
@@ -263,8 +263,8 @@ apiconnect.cfg: |
       ciphers DHE_DSS_WITH_3DES_EDE_CBC_SHA
       ciphers RSA_WITH_3DES_EDE_CBC_SHA
       idcred gwd_id_cred
-{{- if .Values.datapower.apimVeloxCertsSecret }}
-      valcred apim_valcred
+{{- if .Values.datapower.apimServerValidationSecret }}
+      valcred apim_server_valcred
       validate-server-cert
 {{ else }}
       no validate-server-cert
@@ -280,6 +280,20 @@ apiconnect.cfg: |
       use-custom-sni-hostname no
     exit
     exit
+
+{{- if .Values.datapower.apimClientValidationSecret }}
+    %if% available "include-config"
+
+    include-config "apim-client-valcred-cfg"
+      config-url "config:///apim-client-valcred.cfg"
+      auto-execute
+      no interface-detection
+    exit
+
+    exec "config:///apim-client-valcred.cfg"
+
+    %endif%
+{{- end}}
 
     crypto
     ssl-server gwd_server
@@ -321,8 +335,8 @@ apiconnect.cfg: |
       ciphers DHE_DSS_WITH_3DES_EDE_CBC_SHA
       ciphers RSA_WITH_3DES_EDE_CBC_SHA
       idcred gwd_id_cred
-{{- if .Values.datapower.apimVeloxCertsSecret }}
-      valcred apim_valcred
+{{- if .Values.datapower.apimClientValidationSecret }}
+      valcred apim_client_valcred
       request-client-auth
       require-client-auth
       validate-client-cert
