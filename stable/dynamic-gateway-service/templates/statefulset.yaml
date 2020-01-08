@@ -239,6 +239,11 @@ spec:
 {{- else }}
               value: "disabled"
 {{- end }}
+{{/* Enable dedicated probe server when APIM client validation enabled */}}
+{{- if .Values.datapower.apimClientValidationSecret }}
+            - name: "PROBE_SERVER_PORT"
+              value: {{ .Values.datapower.apicGatewayServiceProbePort | quote }}
+{{- end }}
             - name: "DATAPOWER_SYSLOG_TCP_REMOTE_HOST"
               value: {{ .Values.datapower.env.syslogRemoteHost | quote }}
             - name: "DATAPOWER_SYSLOG_TCP_REMOTE_PORT"
@@ -349,6 +354,11 @@ spec:
               name: adp-local-port
             - containerPort: {{ .Values.datapower.apiDebugProbePeeringMonitorPort }}
               name: adp-monit-port
+{{/* Enable dedicated probe server when APIM client validation enabled */}}
+{{- if .Values.datapower.apimClientValidationSecret }}
+            - containerPort: {{ .Values.datapower.apicGatewayServiceProbePort }}
+              name: apic-gw-probe
+{{- end }}
             - containerPort: {{ .Values.datapower.apicGatewayServiceLocalPort }}
               name: apic-gw-mgmt
             - containerPort: {{ .Values.datapower.apiGatewayLocalPort }}
@@ -361,18 +371,30 @@ spec:
               name: rmi-port
           livenessProbe:
             httpGet:
+{{/* Enable dedicated probe server when APIM client validation enabled */}}
+{{- if .Values.datapower.apimClientValidationSecret }}
+              scheme: HTTP
+              port: apic-gw-probe
+{{- else }}
               scheme: HTTPS
-              path: /health
               port: apic-gw-mgmt
+{{- end }}
+              path: /health
             initialDelaySeconds: 180
             timeoutSeconds: 5
             periodSeconds: 10
             failureThreshold: 12
           readinessProbe:
             httpGet:
+{{/* Enable dedicated probe server when APIM client validation enabled */}}
+{{- if .Values.datapower.apimClientValidationSecret }}
+              scheme: HTTP
+              port: apic-gw-probe
+{{- else }}
               scheme: HTTPS
-              path: /ready
               port: apic-gw-mgmt
+{{- end }}
+              path: /ready
             initialDelaySeconds: 120
             timeoutSeconds: 5
             periodSeconds: 10
