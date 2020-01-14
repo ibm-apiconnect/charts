@@ -115,11 +115,9 @@ spec:
 {{- if eq .Values.datapower.gatewaySshState "enabled" }}
             runAsNonRoot: false
             runAsUser: 0
-            fsGroup: 0
 {{- else }}
             runAsNonRoot: true
             runAsUser: 1000
-            fsGroup: 1000
 {{- end }}
             capabilities:
 {{- if ne .Values.datapower.gatewaySshState "enabled" }}
