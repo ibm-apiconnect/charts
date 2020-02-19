@@ -89,6 +89,18 @@ Alternatively, a YAML file that specifies the values for the parameters can be p
 $ helm install --name my-release -f values.yaml stable/dynamic-gateway-service
 ```
 
+### Load balancing annotations
+For most Ingress/Route implementations, load balancing strategies are controlled via annotations which vary between implementations. This chart enables setting Ingress/Route annotations at deploy-time via values. The following is a valid annotation example for the default OpenShift Route implementation:
+```
+ingressType: "route"
+ingress:
+  gateway:
+    annotations:
+      haproxy.router.openshift.io/balance: "roundrobin"
+  gwd:
+    annotations:
+      haproxy.router.openshift.io/balance: "roundrobin"
+```
 
 ### Adding new config
 New DataPower configuration can be added into the gateway by use of the `datapower.additionalConfig` value. This value takes the form of a list of domain-config pairs, like so:
