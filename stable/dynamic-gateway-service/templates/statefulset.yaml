@@ -330,6 +330,11 @@ spec:
             - name: "DATAPOWER_IS_ICP4I"
               value: "true"
 {{- end }}
+            - name: "SEND_LATEST_PROCESS_EVENT"
+{{- if eq .Values.datapower.env.sendLatestProcessEvent "true" }}
+              value: "true"
+{{- else }}
+              value: "false"
 
           resources:
 {{ toYaml .Values.datapower.resources | indent 12 }}

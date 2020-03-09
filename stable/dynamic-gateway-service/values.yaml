@@ -127,6 +127,7 @@ datapower:
   restManagementLocalAddress: 0.0.0.0
   xmlManagementLocalAddress: 0.0.0.0
   xmlManagementLocalPort: 5550
+  sendLatestProcessEvent: false
   # This value should either be 'enabled' or 'disabled'. Default is enabled
   snmpState: "enabled"
   snmpLocalAddress: 0.0.0.0
