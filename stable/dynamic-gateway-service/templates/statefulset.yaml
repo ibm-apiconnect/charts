@@ -152,6 +152,9 @@ spec:
 {{- if .Values.datapower.additionalCerts }}
               sh /opt/ibm/datapower/init/scripts/additional-cert-handler.sh
 {{- end }}
+{{- if .Values.datapower.env.syslogTLSSecret }}
+              sh /opt/ibm/datapower/init/scripts/usrcerts-handler.sh syslog
+{{- end }}
 {{- if .Values.datapower.apimServerValidationSecret }}
               sh /opt/ibm/datapower/init/scripts/apim-certs-handler.sh server
 {{- end }}
@@ -425,8 +428,8 @@ spec:
             - name: drouter-config-volume
               mountPath: /drouter/config
 {{- if .Values.datapower.env.syslogTLSSecret }}
-            - name: root-secure-usrcerts-apiconnect-syslog-volume
-              mountPath: /root/secure/usrcerts/apiconnect/syslog
+            - name: init-usrcerts-syslog-volume
+              mountPath: /opt/ibm/datapower/init/usrcerts/syslog
 {{- end }}
 {{- if .Values.datapower.apimServerValidationSecret }}
             - name: init-apim-certs-server-volume
@@ -650,7 +653,7 @@ spec:
         - name: root-secure-usrcerts-volume
           emptyDir: {}
 {{- if .Values.datapower.env.syslogTLSSecret }}
-        - name: root-secure-usrcerts-apiconnect-syslog-volume
+        - name: init-usrcerts-syslog-volume
           secret:
             secretName: {{ .Values.datapower.env.syslogTLSSecret }}
 {{- end }}
