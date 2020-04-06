@@ -23,3 +23,7 @@ data:
   apim-certs-handler.sh: |
 {{ .Files.Get "static/apim-certs-handler.sh" | indent 4 }}
 {{- end }}
+{{- if .Values.datapower.env.syslogTLSSecret }}
+  usrcerts-handler.sh: |
+{{ .Files.Get "static/usrcerts-handler.sh" | indent 4 }}
+{{- end }}
