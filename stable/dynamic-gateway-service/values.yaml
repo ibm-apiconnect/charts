@@ -80,7 +80,12 @@ datapower:
   #
   # In all of the examples above, `.Values.datapower.adminUserSecret` should be set to 'admin-credentials' for the admin user to be configured.
   adminUserSecret:
-  apimVeloxCertsSecret:
+  # Name of secret that provides certificates used to validate outbound connections to the API Manager
+  # If not provided, outbound connections will not be validated
+  apimServerValidationSecret:
+  # Name of secret that provides certificates used to validate inbound connections from the API Manager
+  # If not provided, inbound connections will not be validated
+  apimClientValidationSecret:
   customDatapowerConfig:
   replicaCount: 3
   gatewayPeeringLocalPort: 16380
@@ -93,6 +98,7 @@ datapower:
   rlPeeringMonitorPort: 26383
   subsPeeringLocalPort: 16384
   subsPeeringMonitorPort: 26384
+  apicGatewayServiceProbePort: 2999
   apicGatewayServiceLocalPort: 3000
   apicGatewayServiceLocalAddress: 0.0.0.0
   apicGatewayServiceTLSSecret:

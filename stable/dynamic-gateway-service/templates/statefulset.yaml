@@ -152,6 +152,15 @@ spec:
 {{- if .Values.datapower.additionalCerts }}
               sh /opt/ibm/datapower/init/scripts/additional-cert-handler.sh
 {{- end }}
+{{- if .Values.datapower.env.syslogTLSSecret }}
+              sh /opt/ibm/datapower/init/scripts/usrcerts-handler.sh syslog
+{{- end }}
+{{- if .Values.datapower.apimServerValidationSecret }}
+              sh /opt/ibm/datapower/init/scripts/apim-certs-handler.sh server
+{{- end }}
+{{- if .Values.datapower.apimClientValidationSecret }}
+              sh /opt/ibm/datapower/init/scripts/apim-certs-handler.sh client
+{{- end }}
 {{- if .Values.datapower.customDatapowerConfig }}
               cat /opt/ibm/datapower/init/custom-config/*.cfg > /drouter/config/apiconnect/custom-config.cfg
 {{- end }}
@@ -232,6 +241,11 @@ spec:
               value: "enabled"
 {{- else }}
               value: "disabled"
+{{- end }}
+{{/* Enable dedicated probe server when APIM client validation enabled */}}
+{{- if .Values.datapower.apimClientValidationSecret }}
+            - name: "PROBE_SERVER_PORT"
+              value: {{ .Values.datapower.apicGatewayServiceProbePort | quote }}
 {{- end }}
             - name: "DATAPOWER_SYSLOG_TCP_REMOTE_HOST"
               value: {{ .Values.datapower.env.syslogRemoteHost | quote }}
@@ -343,6 +357,11 @@ spec:
               name: adp-local-port
             - containerPort: {{ .Values.datapower.apiDebugProbePeeringMonitorPort }}
               name: adp-monit-port
+{{/* Enable dedicated probe server when APIM client validation enabled */}}
+{{- if .Values.datapower.apimClientValidationSecret }}
+            - containerPort: {{ .Values.datapower.apicGatewayServiceProbePort }}
+              name: apic-gw-probe
+{{- end }}
             - containerPort: {{ .Values.datapower.apicGatewayServiceLocalPort }}
               name: apic-gw-mgmt
             - containerPort: {{ .Values.datapower.apiGatewayLocalPort }}
@@ -355,18 +374,30 @@ spec:
               name: rmi-port
           livenessProbe:
             httpGet:
+{{/* Enable dedicated probe server when APIM client validation enabled */}}
+{{- if .Values.datapower.apimClientValidationSecret }}
+              scheme: HTTP
+              port: apic-gw-probe
+{{- else }}
               scheme: HTTPS
-              path: /health
               port: apic-gw-mgmt
+{{- end }}
+              path: /health
             initialDelaySeconds: 180
             timeoutSeconds: 5
             periodSeconds: 10
             failureThreshold: 12
           readinessProbe:
             httpGet:
+{{/* Enable dedicated probe server when APIM client validation enabled */}}
+{{- if .Values.datapower.apimClientValidationSecret }}
+              scheme: HTTP
+              port: apic-gw-probe
+{{- else }}
               scheme: HTTPS
-              path: /ready
               port: apic-gw-mgmt
+{{- end }}
+              path: /ready
             initialDelaySeconds: 120
             timeoutSeconds: 5
             periodSeconds: 10
@@ -397,12 +428,16 @@ spec:
             - name: drouter-config-volume
               mountPath: /drouter/config
 {{- if .Values.datapower.env.syslogTLSSecret }}
-            - name: root-secure-usrcerts-apiconnect-syslog-volume
-              mountPath: /root/secure/usrcerts/apiconnect/syslog
+            - name: init-usrcerts-syslog-volume
+              mountPath: /opt/ibm/datapower/init/usrcerts/syslog
 {{- end }}
-{{- if .Values.datapower.apimVeloxCertsSecret }}
-            - name: root-secure-usrcerts-apiconnect-apim-volume
-              mountPath: /root/secure/usrcerts/apiconnect/apim
+{{- if .Values.datapower.apimServerValidationSecret }}
+            - name: init-apim-certs-server-volume
+              mountPath: /opt/ibm/datapower/init/apim-certs/server
+{{- end }}
+{{- if .Values.datapower.apimClientValidationSecret }}
+            - name: init-apim-certs-client-volume
+              mountPath: /opt/ibm/datapower/init/apim-certs/client
 {{- end }}
             - name: drouter-ramdisk2-volume
               mountPath: /drouter/ramdisk2
@@ -618,14 +653,19 @@ spec:
         - name: root-secure-usrcerts-volume
           emptyDir: {}
 {{- if .Values.datapower.env.syslogTLSSecret }}
-        - name: root-secure-usrcerts-apiconnect-syslog-volume
+        - name: init-usrcerts-syslog-volume
           secret:
             secretName: {{ .Values.datapower.env.syslogTLSSecret }}
 {{- end }}
-{{- if .Values.datapower.apimVeloxCertsSecret }}
-        - name: root-secure-usrcerts-apiconnect-apim-volume
+{{- if .Values.datapower.apimServerValidationSecret }}
+        - name: init-apim-certs-server-volume
           secret:
-            secretName: {{ .Values.datapower.apimVeloxCertsSecret }}
+            secretName: {{ .Values.datapower.apimServerValidationSecret }}
+{{- end }}
+{{- if .Values.datapower.apimClientValidationSecret }}
+        - name: init-apim-certs-client-volume
+          secret:
+            secretName: {{ .Values.datapower.apimClientValidationSecret }}
 {{- end }}
 {{- if .Values.datapower.additionalConfig }}
         - name: init-additional-config-volume
