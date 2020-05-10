@@ -115,11 +115,9 @@ spec:
 {{- if eq .Values.datapower.gatewaySshState "enabled" }}
             runAsNonRoot: false
             runAsUser: 0
-            fsGroup: 0
 {{- else }}
             runAsNonRoot: true
             runAsUser: 101
-            fsGroup: 101
 {{- end }}
             capabilities:
               drop:
@@ -425,8 +423,6 @@ spec:
 {{- end }}
             - name: start-volume
               mountPath: /start
-            - name: drouter-config-volume
-              mountPath: /drouter/config
 {{- if .Values.datapower.env.syslogTLSSecret }}
             - name: init-usrcerts-syslog-volume
               mountPath: /opt/ibm/datapower/init/usrcerts/syslog
@@ -454,8 +450,6 @@ spec:
 {{- if .Values.datapower.additionalLocalTar }}
             - name: init-additional-local-volume
               mountPath: /opt/ibm/datapower/init/additional-local
-            - name: drouter-local-volume
-              mountPath: /drouter/local
 {{- end }}
 {{- if .Values.datapower.additionalCerts }}
 {{- range .Values.datapower.additionalCerts }}
