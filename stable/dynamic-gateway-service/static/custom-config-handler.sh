@@ -13,16 +13,18 @@
 
 
 # Loop over all files in /init/additional-config/
-for configfile in /opt/ibm/datapower/init/additional-config/*
+for configdir in /opt/ibm/datapower/init/additional-config/*
 do
   # Get domain name by stripping path and extension
-  domain="$(echo $configfile | sed -e 's|/opt/ibm/datapower/init/additional-config/||g' -e 's|.cfg||g')"
+  domain="$(echo $configdir | sed 's|/opt/ibm/datapower/init/additional-config/||g')"
 
   # Check for default domain, which is a special case
   if [ "$domain" == "default" ]
   then
-    # default domain is defined in auto-startup.cfg
-    cat $configfile >> /drouter/config/auto-startup.cfg
+    for configfile in $configdir/*; do
+      # default domain is defined in auto-startup.cfg
+      cat $configfile >> /drouter/config/auto-startup.cfg
+    done
     # No further action needed for default domain
     continue
   fi
@@ -30,8 +32,10 @@ do
   # Check for existence of domain
   if [ -e "/drouter/config/$domain/$domain.cfg" ]
   then
-    # Append new configuration into existing domain
-    cat $configfile >> /drouter/config/$domain/$domain.cfg
+    for configfile in $configdir/*; do
+      # Append new configuration into existing domain
+      cat $configfile >> /drouter/config/$domain/$domain.cfg
+    done
     # No further action needed
     continue
   fi
@@ -39,7 +43,9 @@ do
   # Domain does not exist, so create it
   mkdir /drouter/config/$domain
   echo "top; configure terminal;" > /drouter/config/$domain/$domain.cfg
-  cat $configfile >> /drouter/config/$domain/$domain.cfg
+  for configfile in $configdir/*; do
+    cat $configfile >> /drouter/config/$domain/$domain.cfg
+  done
 
   # Append config execution to default domain
   (

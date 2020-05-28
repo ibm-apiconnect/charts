@@ -17,15 +17,15 @@ return_dir="$(pwd)"
 mkdir /opt/ibm/datapower/init/local-extract
 cd /opt/ibm/datapower/init/local-extract
 
-# Decode tar
-base64 -d /opt/ibm/datapower/init/additional-local/* > local.tar
+# Copy tarball to unpack directory
+cp /opt/ibm/datapower/init/additional-local/* local.tar
 
 # extract
 tar xf local.tar
 rm local.tar
 
 # If top level is local, move into local
-if ls | grep -q 'local/'
+if ls | grep -q 'local'
 then
   cd local/
 fi
