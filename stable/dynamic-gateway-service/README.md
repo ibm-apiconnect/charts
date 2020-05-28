@@ -122,11 +122,6 @@ Have a user with sufficient cluster permissions create your configmaps prior to 
 
 ### Adding local files
 
-```
-datapower:
-  additionalLocalTar: "datapower-local-configmap"
-```
-
 Local files can be added into the gateway deployment by use of the `datapower.additionalLocalTar` value. This value is a Kubernetes configmap of a tar file which contains all the files you wish to add. This tar file should be a well formatted DataPower `local:` directory where files intended for the `default` domain are on the top level and all files intended for a different domain are in a subdirectory named for that domain.
 
 Example tar file contents:
@@ -149,6 +144,11 @@ tar czf datapower-local-files.tar.gz local/*
 Example configmap creation:
 ```
 kubectl create configmap datapower-local-configmap --from-file=datapower-local-files.tar.gz
+```
+
+```
+datapower:
+  additionalLocalTar: "datapower-local-configmap"
 ```
 
 ### Adding certificates
