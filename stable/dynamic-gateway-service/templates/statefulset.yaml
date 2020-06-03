@@ -115,11 +115,9 @@ spec:
 {{- if eq .Values.datapower.gatewaySshState "enabled" }}
             runAsNonRoot: false
             runAsUser: 0
-            fsGroup: 0
 {{- else }}
             runAsNonRoot: true
             runAsUser: 101
-            fsGroup: 101
 {{- end }}
             capabilities:
               drop:
@@ -425,8 +423,6 @@ spec:
 {{- end }}
             - name: start-volume
               mountPath: /start
-            - name: drouter-config-volume
-              mountPath: /drouter/config
 {{- if .Values.datapower.env.syslogTLSSecret }}
             - name: init-usrcerts-syslog-volume
               mountPath: /opt/ibm/datapower/init/usrcerts/syslog
@@ -454,8 +450,6 @@ spec:
 {{- if .Values.datapower.additionalLocalTar }}
             - name: init-additional-local-volume
               mountPath: /opt/ibm/datapower/init/additional-local
-            - name: drouter-local-volume
-              mountPath: /drouter/local
 {{- end }}
 {{- if .Values.datapower.additionalCerts }}
 {{- range .Values.datapower.additionalCerts }}
@@ -466,6 +460,10 @@ spec:
 {{- if .Values.datapower.additionalConfig }}
             - name: init-additional-config-volume
               mountPath: /opt/ibm/datapower/init/additional-config
+            {{- range .Values.datapower.additionalConfig }}
+            - name: additional-config-{{ .config }}
+              mountPath: /opt/ibm/datapower/init/additional-config/{{ .domain }}
+            {{- end }}
 {{- end }}
 {{- if eq (.Values.odTracing.enabled | default "false") "true" }}
             - name: icp4i-od-jaeger-client
@@ -669,13 +667,17 @@ spec:
 {{- end }}
 {{- if .Values.datapower.additionalConfig }}
         - name: init-additional-config-volume
+          emptyDir: {}
+        {{- range .Values.datapower.additionalConfig }}
+        - name: additional-config-{{ .config }}
           configMap:
-            name: {{ template "dynamic-gateway-service.fullname" . }}-custom-config
+            name: {{ .config }}
+        {{- end }}
 {{- end }}
 {{- if .Values.datapower.additionalLocalTar }}
         - name: init-additional-local-volume
           configMap:
-            name: {{ template "dynamic-gateway-service.fullname" . }}-local-files
+            name: {{ .Values.datapower.additionalLocalTar }}
         - name: drouter-local-volume
           emptyDir: {}
 {{- end }}
