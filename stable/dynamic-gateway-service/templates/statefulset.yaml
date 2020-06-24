@@ -380,6 +380,9 @@ spec:
               scheme: HTTPS
               port: apic-gw-mgmt
 {{- end }}
+              httpHeaders:
+              - name: Connection
+                value: close
               path: /health
             initialDelaySeconds: 180
             timeoutSeconds: 5
@@ -395,6 +398,9 @@ spec:
               scheme: HTTPS
               port: apic-gw-mgmt
 {{- end }}
+              httpHeaders:
+              - name: Connection
+                value: close
               path: /ready
             initialDelaySeconds: 120
             timeoutSeconds: 5
