@@ -19,7 +19,7 @@ data:
   additional-cert-handler.sh: |
 {{ .Files.Get "static/additional-cert-handler.sh" | indent 4 }}
 {{- end }}
-{{- if or ((.Values.datapower.apimServerValidationSecret) (.Values.datapower.apimClientValidationSecret)) }}
+{{- if or (.Values.datapower.apimServerValidationSecret) (.Values.datapower.apimClientValidationSecret) }}
   apim-certs-handler.sh: |
 {{ .Files.Get "static/apim-certs-handler.sh" | indent 4 }}
 {{- end }}
