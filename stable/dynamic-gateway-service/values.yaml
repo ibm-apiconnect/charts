@@ -8,10 +8,10 @@
 datapower:
   # License version of DataPower. MUST be included to deploy.
   # Accepts Developers, Production, and Nonproduction.
-  licenseVersion:
+  licenseVersion: Developers
   image:
-    repository: ibmcom/datapower
-    tag: 2018.4.1
+    repository: apic-dev-docker-local.artifactory.swg-devops.com/apiconnect/datapower-api-gateway
+    tag: 2018.4.1.13u-release-ubi-prod
     pullPolicy: IfNotPresent
     pullSecrets:
     - name: datapower-pull-secrets
@@ -165,8 +165,8 @@ datapowerMonitor:
     lifecycleDebounceMs: 10000
     peeringRecoveryCheckIntervalMs: 1000
   image:
-    repository:
-    tag:
+    repository: apic-dev-docker-local.artifactory.swg-devops.com/k8s-datapower-monitor
+    tag: 2018.4.1.9-ubi-icp4i
   resources:
     requests:
       memory: "256Mi"
