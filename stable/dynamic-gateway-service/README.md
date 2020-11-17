@@ -6,9 +6,9 @@ This chart can deploy one or more IBM DataPower Gateway nodes with a default con
 Before you can install this chart you need to create a kubernetes secret containing 5 certificates. These certificates can be created using `openssl`. You can create the secret using the following command `kubectl create secret generic gw-certs --from-file=.`, where `gw-certs` is the name of the secret and the from-file is current directory. The name `gw-certs` needs to be set for the required field `datapower.apicGatewayTLSSecret`. The directory needs to contains the files named below.
 ```
 peering_key.pem
-gwd_ca.pem       
+gwd_ca.pem
 gwd_cert.pem
-gwd_key.pem      
+gwd_key.pem
 peering_cert.pem
 ```
 
@@ -166,6 +166,7 @@ The secrets are Kubernetes secrets which contain the crypto files you wish to us
 kubectl create secret generic my-secret --from-file=/path/to/key.pem --from-file=/path/to/cert.pem
 ```
 
+When using certificate for `syslog`, it is recommended to use a CA certificate.
 
 
 [View the official IBM DataPower Gateway for Developers Docker Image in Docker Hub](https://hub.docker.com/r/ibmcom/datapower/)

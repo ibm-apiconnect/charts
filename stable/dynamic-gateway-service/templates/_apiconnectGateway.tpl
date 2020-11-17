@@ -497,6 +497,7 @@ apiconnect.cfg: |
       valcred syslog_valcred
         admin-state enabled
         certificate syslog_cert
+        cert-validation-mode pkix
       exit
     exit
 
