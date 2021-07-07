@@ -273,10 +273,7 @@ apiconnect.cfg: |
       cache-timeout 300
       cache-size 100
       ssl-client-features use-sni
-      curves secp521r1
-      curves secp384r1
-      curves secp256k1
-      curves secp256r1
+      no curves
       use-custom-sni-hostname no
     exit
     exit
