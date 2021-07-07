@@ -544,10 +544,7 @@ apiconnect.cfg: |
         caching
         cache-timeout 300
         cache-size 100
-        curves secp521r1
-        curves secp384r1
-        curves secp256k1
-        curves secp256r1
+        no curves
       exit
     exit
 {{- end }}
