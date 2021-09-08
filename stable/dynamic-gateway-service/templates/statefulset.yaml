@@ -62,7 +62,9 @@ spec:
       imagePullSecrets:
       {{- if .Values.datapower.image.pullSecrets }}
       {{- range .Values.datapower.image.pullSecrets }}
+      {{- if .name }}
       - name: {{ .name }}
+      {{- end }}
       {{- end }}
       {{- end }}
       {{- if .Values.cip }}
