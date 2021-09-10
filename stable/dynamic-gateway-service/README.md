@@ -37,7 +37,7 @@ The helm chart has the following Values that can be overridden using the install
 |-----------------------------------------------------------------|----------------------------------------------------------|-----------------------|
 | `datapower.licenseVersion`                                      | License version of DataPower to be deployed              | N/A                   |
 | `datapower.replicaCount`                                        | The replicaCount for the StatefulSet                     | 3                     |
-| `datapower.image.repository`                                    | The image to use for this deployment                     | ibmcom/datapower      |
+| `datapower.image.repository`                                    | The image to use for this deployment                     | icr.io/integration/datapower/datapower-limited      |
 | `datapower.image.tag`                                           | The image tag to use for this deployment                 | 2018.4.1              |
 | `datapower.image.pullPolicy`                                    | Determines when the image should be pulled               | IfNotPresent          |
 | `datapower.env.workerThreads`                                   | Number of DataPower worker threads                       |                       |
@@ -169,7 +169,7 @@ kubectl create secret generic my-secret --from-file=/path/to/key.pem --from-file
 When using certificate for `syslog`, it is recommended to use a CA certificate.
 
 
-[View the official IBM DataPower Gateway for Developers Docker Image in Docker Hub](https://hub.docker.com/r/ibmcom/datapower/)
+Get your official IBM DataPower Gateway for Developers Docker Image from IBM Container Registry at `icr.io/integration/datapower/datapower-limited`. Starting in 2018.4.1.18, this image will no longer be published to Docker Hub.
 
 [View the IBM DataPower Gateway Product Page](http://www-03.ibm.com/software/products/en/datapower-gateway)
 
