@@ -10,7 +10,7 @@ datapower:
   # Accepts Developers, Production, and Nonproduction.
   licenseVersion:
   image:
-    repository: ibmcom/datapower
+    repository: icr.io/integration/datapower/datapower-limited
     tag: 2018.4.1
     pullPolicy: IfNotPresent
     pullSecrets:
