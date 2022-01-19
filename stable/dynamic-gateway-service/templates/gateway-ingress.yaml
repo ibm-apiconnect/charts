@@ -1,6 +1,6 @@
 {{- if eq .Values.ingressType "ingress" }}
 {{- if .Values.ingress.gateway.enabled -}}
-apiVersion: extensions/v1beta1
+apiVersion: networking.k8s.io/v1
 kind: Ingress
 metadata:
   name: {{ template "dynamic-gateway-service.fullname" . }}-gw
@@ -23,9 +23,12 @@ spec:
       http:
         paths:
           - path: /
+            pathType: ImplementationSpecific
             backend:
-              serviceName: {{ template "dynamic-gateway-service.fullname" $ }}-ingress
-              servicePort: {{ $.Values.datapower.apiGatewayLocalPort }}
+              service:
+                name: {{ template "dynamic-gateway-service.fullname" $ }}-ingress
+                port:
+                  number: {{ $.Values.datapower.apiGatewayLocalPort }}
     {{- end -}}
   {{- if .Values.ingress.gateway.enableTLS }}
   tls:
