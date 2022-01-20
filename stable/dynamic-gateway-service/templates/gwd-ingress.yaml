@@ -21,12 +21,13 @@ spec:
     - host: {{ $host.name }}
       http:
         paths:
-          - path: /
-            pathType: ImplementationSpecific
-            backend:
-              service:
-                name: {{ template "dynamic-gateway-service.fullname" $ }}-ingress
-                port: {{ $.Values.datapower.apicGatewayServiceLocalPort }}
+        - path: /
+          pathType: ImplementationSpecific
+          backend:
+            service:
+              name: {{ template "dynamic-gateway-service.fullname" $ }}-ingress
+              port:
+                number: {{ $.Values.datapower.apicGatewayServiceLocalPort }}
     {{- end -}}
   {{- if .Values.ingress.gwd.enableTLS }}
   tls:
